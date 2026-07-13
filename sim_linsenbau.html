@@ -290,12 +290,22 @@ function byId(id){ return document.getElementById(id); }
 function fmt(v, dec){ return v.toFixed(dec === undefined ? 1 : dec).replace('.', ','); }
 function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
 
-/* ════════ postMessage ════════ */
-state.embedded = (function(){ try { return window.parent && window.parent !== window; } catch(e){ return true; } })();
+/* ════════ postMessage ════════
+   Der Host kann die Werkstatt entweder als iframe einbetten (dann ist der
+   Gegenpart window.parent) oder in einem eigenen Tab öffnen (dann window.opener).
+   hostWindow() liefert das jeweils richtige Ziel; ist keines vorhanden, läuft die
+   Simulation eigenständig ohne Fortschrittskopplung. */
+function hostWindow(){
+  try { if (window.parent && window.parent !== window) return window.parent; } catch(e){ return window.parent; }
+  try { if (window.opener && window.opener !== window) return window.opener; } catch(e){}
+  return null;
+}
+state.embedded = !!hostWindow();
 function postHost(msg){
-  if (!state.embedded) return;
+  const host = hostWindow();
+  if (!host) return;
   msg.source = 'linsenbau';
-  try { window.parent.postMessage(msg, '*'); } catch(e){}
+  try { host.postMessage(msg, '*'); } catch(e){}
 }
 window.addEventListener('message', function(e){
   var d = e.data;

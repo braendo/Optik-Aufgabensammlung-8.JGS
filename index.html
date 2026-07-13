@@ -422,21 +422,8 @@
   border:none;border-radius:10px;padding:11px 18px;cursor:pointer;white-space:nowrap;}
 .sim-open-btn:hover{background:#2569b8;}
 .sim-launcher-hint{font-size:13.5px;line-height:1.45;color:var(--muted);flex:1;min-width:200px;}
-/* ── Overlay mit eingebetteter Simulation ── */
-.sim-overlay{position:fixed;inset:0;z-index:9000;background:rgba(8,14,24,.72);
-  display:flex;align-items:center;justify-content:center;padding:24px;}
-.sim-box{background:#0d1b2a;border:1px solid #1e3a5f;border-radius:16px;
-  width:min(1180px,100%);height:min(820px,100%);display:flex;flex-direction:column;
-  overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);}
-.sim-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:11px 16px;background:#112236;border-bottom:1px solid #1e3a5f;flex-shrink:0;}
-.sim-title{font-weight:800;font-size:15px;color:#7ec8e3;}
-.sim-close{font:inherit;font-weight:700;font-size:14px;color:#e8f4f8;background:#1e4d7a;
-  border:1px solid #3a7abf;border-radius:9px;padding:8px 14px;cursor:pointer;}
-.sim-close:hover{background:#2a6aaa;}
-.sim-frame{flex:1;width:100%;border:none;background:#0d1b2a;}
-@media (max-width:640px){.sim-overlay{padding:0;}.sim-box{border-radius:0;height:100%;}}
-@media print{.sim-overlay,.sim-launcher{display:none !important;}}
+/* Die Simulationen öffnen in einem neuen Tab; die früheren Overlay-Stile entfallen. */
+@media print{.sim-launcher{display:none !important;}}
 </style>
 </head>
 <body>
@@ -537,49 +524,8 @@
 
 </div> <!-- /mainContent -->
 
-<!-- Overlay mit eingebetteter Sammellinse-Simulation -->
-<div id="simOverlay" class="sim-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Sammellinse-Simulation">
-  <div class="sim-box">
-    <div class="sim-head">
-      <span class="sim-title">&#128300; Interaktive Simulation: Sammellinse</span>
-      <button id="simClose" class="sim-close" type="button">&#10005; Schließen</button>
-    </div>
-    <iframe id="simFrame" class="sim-frame" title="Sammellinse-Simulation"></iframe>
-  </div>
-</div>
-
-<!-- Overlay mit eingebetteter Brechungs-Simulation -->
-<div id="simOverlayB" class="sim-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Brechung-Simulation">
-  <div class="sim-box">
-    <div class="sim-head">
-      <span class="sim-title">&#128300; Interaktive Simulation: Brechung</span>
-      <button id="simCloseB" class="sim-close" type="button">&#10005; Schließen</button>
-    </div>
-    <iframe id="simFrameB" class="sim-frame" title="Brechung-Simulation"></iframe>
-  </div>
-</div>
-
-<!-- Overlay mit eingebetteter Taucherblick-Simulation (Snellius-Fenster) -->
-<div id="simOverlayT" class="sim-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Taucherblick-Simulation">
-  <div class="sim-box">
-    <div class="sim-head">
-      <span class="sim-title">&#128300; Simulation: Taucherblick &amp; Snellius-Fenster</span>
-      <button id="simCloseT" class="sim-close" type="button">&#10005; Schließen</button>
-    </div>
-    <iframe id="simFrameT" class="sim-frame" title="Taucherblick-Simulation"></iframe>
-  </div>
-</div>
-
-<!-- Overlay mit eingebetteter 3D-Linsenwerkstatt (Aufgabe E12, Typ linsenbau) -->
-<div id="simOverlayL" class="sim-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="3D-Linsenwerkstatt">
-  <div class="sim-box">
-    <div class="sim-head">
-      <span class="sim-title">&#128295; 3D-Werkstatt: Der Linsen-Schleifer</span>
-      <button id="simCloseL" class="sim-close" type="button">&#10005; Schließen</button>
-    </div>
-    <iframe id="simFrameL" class="sim-frame" title="3D-Linsenwerkstatt"></iframe>
-  </div>
-</div>
+<!-- Die Simulationen öffnen als eigenständige Seiten in einem neuen Tab
+     (siehe openSimTab weiter unten); früher genutzte iframe-Overlays entfallen. -->
 
 <footer>8. Klasse Physik Teilgebiet Optik</footer>
 
@@ -2422,10 +2368,10 @@ function createLupenaugeInteraktion(container, spec){
   return { hasUserInput, grade, result, reveal };
 }
 
-/* ---------- 4b) Linsenbau: 3D-Werkstatt im Vollbild-Overlay (Aufgabe E12) ----------
-   Die Karte zeigt nur Start-Button + Status; die eigentliche Simulation läuft im
-   iframe-Overlay (#simOverlayL) und meldet Fortschritt/Erfolg per postMessage zurück
-   (Verdrahtung im Script-Block am Dateiende). setSolved/setProgress werden dort
+/* ---------- 4b) Linsenbau: 3D-Werkstatt im neuen Tab (Aufgabe E12) ----------
+   Die Karte zeigt nur Start-Button + Status; die eigentliche Simulation läuft in
+   einem eigenen Browser-Tab (sim_linsenbau.html) und meldet Fortschritt/Erfolg per
+   postMessage zurück (Verdrahtung im Script-Block am Dateiende). setSolved/setProgress werden dort
    asynchron aufgerufen und stoßen über spec.onmoved dieselbe Kette an wie bei allen
    anderen interaktiven Typen (Prüf-Button freischalten + Fortschritt). */
 function createLinsenbauInteraktion(container, spec){
@@ -6128,40 +6074,61 @@ showStart();
 })();
 </script>
 <script>
-/* ── Zusatz-Option: Sammellinse-Simulation als isoliertes iframe-Overlay ──
-   Die Simulation liegt als eigene Datei sim_sammellinse.html daneben und wird
-   beim ersten Öffnen in das iframe geladen. So bleiben deren globale CSS/IDs vom
-   Rest der Aufgabensammlung getrennt; auf GitHub Pages und offline im selben
-   Ordner gleichermaßen nutzbar. */
+/* ── Gemeinsamer Helfer: Simulationen in einem neuen Browser-Tab öffnen ──
+   Statt die Simulation als Overlay ins Hauptfenster zu laden, wird sie in einem
+   eigenen Tab geöffnet. So belegt sie keinen Platz auf der Aufgabenseite, und die
+   Seite bleibt im Ausgangstab unberührt. Auf iPadOS/Safari gibt es keine frei
+   beweglichen Fenster – window.open erzeugt dort einen neuen Tab, der der
+   Simulation den vollen Bildschirm gibt.  WICHTIG: openSimTab MUSS synchron im
+   Klick-Handler aufgerufen werden, sonst blockiert iOS Safari das Öffnen.
+   Ein stabiler Fenstername verhindert, dass sich pro Klick ein weiterer Tab
+   auftut – ein bereits offener Tab wird stattdessen wiederverwendet/fokussiert. */
 (function(){
-  let loaded = false;
-  const overlay = document.getElementById('simOverlay');
-  const frame   = document.getElementById('simFrame');
-  const launcher= document.getElementById('simLauncher');
+  function showSimHint(msg){
+    let t = document.getElementById('simTabHint');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'simTabHint';
+      t.setAttribute('role','alert');
+      t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);'
+        + 'max-width:90vw;background:#b91c1c;color:#fff;padding:12px 18px;border-radius:12px;'
+        + 'font:500 15px/1.45 system-ui,-apple-system,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.35);'
+        + 'z-index:99999;text-align:center';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.style.display = 'none'; }, 7000);
+  }
+  function openSimTab(url, name){
+    const win = window.open(url, name || '_blank');
+    if(!win){
+      showSimHint('Die Simulation soll sich in einem neuen Tab öffnen, wurde aber vom Browser blockiert. '
+        + 'Bitte für diese Seite Pop-ups erlauben und erneut tippen.');
+      return null;
+    }
+    try { win.focus(); } catch(e){}
+    return win;
+  }
+  window.openSimTab  = openSimTab;
+  window.showSimHint = showSimHint;
+})();
+</script>
+<script>
+/* ── Zusatz-Option: Sammellinse-Simulation im neuen Tab ──
+   Die Simulation liegt als eigene Datei sim_sammellinse.html daneben und wird
+   per openSimTab in einem neuen Browser-Tab geöffnet; auf GitHub Pages und
+   offline im selben Ordner gleichermaßen nutzbar. */
+(function(){
+  const launcher = document.getElementById('simLauncher');
 
-  function decodeB64Utf8(b64){
-    const bin = atob(b64);
-    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-    return new TextDecoder('utf-8').decode(bytes);
-  }
   function openSim(){
-    if(!loaded){ frame.src = 'sim_sammellinse.html'; loaded = true; }
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSim(){
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
+    window.openSimTab('sim_sammellinse.html', 'sim_sammellinse');
   }
 
   const openBtn = document.getElementById('simOpen');
   if(openBtn) openBtn.addEventListener('click', openSim);
-  const closeBtn = document.getElementById('simClose');
-  if(closeBtn) closeBtn.addEventListener('click', closeSim);
-  overlay.addEventListener('click', e => { if(e.target === overlay) closeSim(); });
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && overlay.style.display !== 'none') closeSim();
-  });
 
   // openTopic erweitern: Launcher nur beim Thema Sammellinse zeigen
   if(typeof openTopic === 'function'){
@@ -6178,40 +6145,19 @@ showStart();
 </script>
 
 <script>
-/* ── Zusatz-Option: Brechungs-Simulation als isoliertes iframe-Overlay ──
+/* ── Zusatz-Option: Brechungs-Simulation im neuen Tab ──
    Aufbau analog zur Sammellinse-Simulation: die Simulation liegt als eigene
-   Datei sim_brechung.html daneben und wird beim ersten Öffnen in das iframe
-   geladen. So bleiben deren globale CSS/IDs vom Rest der Aufgabensammlung
-   getrennt. */
+   Datei sim_brechung.html daneben und wird per openSimTab in einem neuen Tab
+   geöffnet. */
 (function(){
-  let loaded = false;
-  const overlay = document.getElementById('simOverlayB');
-  const frame   = document.getElementById('simFrameB');
-  const launcher= document.getElementById('simLauncherB');
+  const launcher = document.getElementById('simLauncherB');
 
-  function decodeB64Utf8(b64){
-    const bin = atob(b64);
-    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-    return new TextDecoder('utf-8').decode(bytes);
-  }
   function openSim(){
-    if(!loaded){ frame.src = 'sim_brechung.html'; loaded = true; }
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSim(){
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
+    window.openSimTab('sim_brechung.html', 'sim_brechung');
   }
 
   const openBtn = document.getElementById('simOpenB');
   if(openBtn) openBtn.addEventListener('click', openSim);
-  const closeBtn = document.getElementById('simCloseB');
-  if(closeBtn) closeBtn.addEventListener('click', closeSim);
-  overlay.addEventListener('click', e => { if(e.target === overlay) closeSim(); });
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && overlay.style.display !== 'none') closeSim();
-  });
 
   // openTopic erweitern: Launcher bei den Themen Brechung, Totalreflexion &
   // Lichtleiter sowie Vermischte Aufgaben zeigen (die Sim enthält die Experimente
@@ -6227,34 +6173,19 @@ showStart();
 </script>
 
 <script>
-/* ── Zusatz-Option: Taucherblick & Snellius-Fenster als isoliertes iframe-Overlay ──
+/* ── Zusatz-Option: Taucherblick & Snellius-Fenster im neuen Tab ──
    Aufbau analog zur Brechungs-Simulation: die Simulation liegt als eigene Datei
-   sim_totalreflexion.html daneben und wird beim ersten Öffnen in das iframe
-   geladen. Launcher nur beim Thema Totalreflexion & Lichtleiter. */
+   sim_totalreflexion.html daneben und wird per openSimTab in einem neuen Tab
+   geöffnet. Launcher nur beim Thema Totalreflexion & Lichtleiter. */
 (function(){
-  let loaded = false;
-  const overlay = document.getElementById('simOverlayT');
-  const frame   = document.getElementById('simFrameT');
-  const launcher= document.getElementById('simLauncherT');
+  const launcher = document.getElementById('simLauncherT');
 
   function openSim(){
-    if(!loaded){ frame.src = 'sim_totalreflexion.html'; loaded = true; }
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  }
-  function closeSim(){
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
+    window.openSimTab('sim_totalreflexion.html', 'sim_totalreflexion');
   }
 
   const openBtn = document.getElementById('simOpenT');
   if(openBtn) openBtn.addEventListener('click', openSim);
-  const closeBtn = document.getElementById('simCloseT');
-  if(closeBtn) closeBtn.addEventListener('click', closeSim);
-  overlay.addEventListener('click', e => { if(e.target === overlay) closeSim(); });
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && overlay.style.display !== 'none') closeSim();
-  });
 
   // openTopic erweitern: Launcher nur beim Thema Totalreflexion & Lichtleiter zeigen
   if(typeof openTopic === 'function'){
@@ -6271,34 +6202,27 @@ showStart();
 /* =====================================================================
    3D-Linsenwerkstatt (Aufgabe E12, Typ 'linsenbau').
    Die komplette Simulation (inkl. three.js) liegt als eigene Datei
-   sim_linsenbau.html daneben (rund 1 MB inkl. three.js) und wird erst beim
-   Öffnen geladen, damit die Aufgabenseite selbst klein und schnell bleibt.
-   Anders als die beiden anderen Sims wird das iframe bei JEDEM Öffnen
-   frisch geladen und beim Schließen entladen: So belegt der WebGL-
-   Kontext auf (alten) iPads keinen Speicher, solange die Werkstatt zu
-   ist. Der Fortschritt lebt in der Aufgaben-Instanz (interState) und
-   wird der Sim beim Öffnen über den init-Handshake zurückgegeben.
+   sim_linsenbau.html daneben (rund 1 MB inkl. three.js) und wird in einem
+   neuen Tab geöffnet, damit die Aufgabenseite selbst klein und schnell bleibt
+   und der WebGL-Kontext das Hauptfenster nicht belastet. Der Fortschritt lebt
+   in der Aufgaben-Instanz (interState) und wird der Sim beim Öffnen über den
+   ready→init-Handshake zurückgegeben.
    ===================================================================== */
 (function(){
-  const overlay = document.getElementById('simOverlayL');
-  const frame   = document.getElementById('simFrameL');
   let currentQid = null;
+  let simWin = null;                                     // Referenz auf den Simulations-Tab
 
-  function decodeB64Utf8(b64){
-    const bin = atob(b64);
-    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-    return new TextDecoder('utf-8').decode(bytes);
-  }
   function openSimL(qid){
     currentQid = qid;
-    frame.src = 'sim_linsenbau.html';   // immer frisch laden
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    // Stabiler Fenstername: ein bereits offener Werkstatt-Tab wird wiederverwendet
+    // (frisch geladen). Der Fortschritt lebt in interState und wird der Sim über den
+    // ready→init-Handshake weiter unten zurückgegeben – auch nach einem Neuladen.
+    const w = window.openSimTab('sim_linsenbau.html', 'sim_linsenbau');
+    if (w) simWin = w;
   }
   function closeSimL(){
-    overlay.style.display = 'none';
-    document.body.style.overflow = '';
-    frame.src = 'about:blank';                          // WebGL-Kontext freigeben
+    try { if (simWin && !simWin.closed) simWin.close(); } catch(e){}  // Tab schließen, WebGL-Kontext freigeben
+    simWin = null;
   }
   window.openLinsenbauSim = openSimL;
 
@@ -6314,27 +6238,19 @@ showStart();
     else openSimL(null);
   });
 
-  const closeBtn = document.getElementById('simCloseL');
-  if (closeBtn) closeBtn.addEventListener('click', closeSimL);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlay.style.display !== 'none') closeSimL();
-  });
-  /* Bewusst KEIN Schließen per Backdrop-Klick: Beim Drehen der 3D-Ansicht
-     landet der Finger leicht auf dem Overlay-Rand. */
-
-  /* Erfolgskanal Sim → Aufgabe. Identität statt Origin prüfen: das Sim-iframe
-     hat unter file:// einen opaken Origin ("null"), auf GitHub Pages denselben
-     Origin wie die Seite. Die Prüfung e.source === frame.contentWindow trägt in
-     beiden Fällen. Instanz immer frisch aus interState holen, nach einem
-     re-render wäre eine gecachte Referenz veraltet. */
+  /* Erfolgskanal Sim → Aufgabe. Identität statt Origin prüfen: der Sim-Tab hat
+     unter file:// einen opaken Origin ("null"), auf GitHub Pages denselben Origin
+     wie die Seite. Die Prüfung e.source === simWin (die von window.open gelieferte
+     Fenster-Referenz) trägt in beiden Fällen. Instanz immer frisch aus interState
+     holen, nach einem re-render wäre eine gecachte Referenz veraltet. */
   window.addEventListener('message', e => {
-    if (e.source !== frame.contentWindow) return;
+    if (!simWin || e.source !== simWin) return;
     const d = e.data;
     if (!d || d.source !== 'linsenbau' || !currentQid) return;
     const inst = interState[currentQid];
     if (d.type === 'ready') {
       const st = (inst && inst.getState) ? inst.getState() : null;
-      frame.contentWindow.postMessage({ source: 'linsenbau-host', type: 'init', qid: currentQid,
+      simWin.postMessage({ source: 'linsenbau-host', type: 'init', qid: currentQid,
         solved: !!(st && st.solved), progress: st ? st.progress : {} }, '*');
     } else if (d.type === 'progress') {
       if (inst && inst.setProgress) inst.setProgress(d.level);
