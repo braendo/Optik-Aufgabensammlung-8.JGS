@@ -8,77 +8,50 @@
 <title>Blickfeld eines Tauchers unter Wasser</title>
 <style>
   :root {
-    color-scheme: light dark;
-    --background: rgb(255, 255, 255);
-    --foreground: rgb(26, 28, 31);
-    --card: rgb(244, 246, 248);
-    --card-foreground: rgb(26, 28, 31);
-    --primary: rgb(35, 137, 238);
-    --primary-foreground: rgb(255, 255, 255);
-    --secondary: rgb(255, 255, 255);
-    --secondary-foreground: rgb(26, 28, 31);
-    --muted: rgb(234, 238, 242);
-    --muted-foreground: rgb(94, 105, 116);
-    --accent: rgb(229, 242, 255);
-    --accent-foreground: rgb(22, 90, 153);
-    --border: rgb(211, 218, 225);
-    --input: rgb(193, 203, 213);
-    --ring: rgb(35, 137, 238);
-    --viz-series-1: rgb(51, 156, 255);
-    --viz-series-2: rgb(243, 136, 59);
-    --viz-series-3: rgb(93, 201, 119);
-    --viz-series-4: rgb(235, 119, 177);
-    --viz-series-5: rgb(155, 121, 236);
-    --viz-series-6: rgb(58, 185, 177);
+    color-scheme: dark;
+    --background: #0d1b2a;
+    --foreground: #e8f4f8;
+    --card: #112236;
+    --card-foreground: #e8f4f8;
+    --primary: #1e4d7a;
+    --primary-foreground: #ffffff;
+    --primary-border: #3a7abf;
+    --primary-active: #2a6aaa;
+    --accent-cyan: #7ec8e3;
+    --secondary: #071525;
+    --secondary-foreground: #e8f4f8;
+    --muted: #112236;
+    --muted-foreground: #8aafc2;
+    --accent: #0d2438;
+    --accent-foreground: #9ed4f0;
+    --border: #1e3a5f;
+    --input: #1e3a5f;
+    --ring: #7ec8e3;
     --font-size-base: 16px;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: rgb(24, 24, 24);
-      --foreground: rgb(255, 255, 255);
-      --card: rgb(45, 45, 45);
-      --card-foreground: rgb(255, 255, 255);
-      --primary: rgb(108, 184, 255);
-      --primary-foreground: rgb(13, 13, 13);
-      --secondary: rgb(54, 54, 54);
-      --secondary-foreground: rgb(255, 255, 255);
-      --muted: rgb(55, 55, 55);
-      --muted-foreground: rgb(190, 194, 199);
-      --accent: rgb(13, 39, 63);
-      --accent-foreground: rgb(131, 195, 255);
-      --border: rgb(73, 73, 73);
-      --input: rgb(89, 89, 89);
-      --ring: rgb(131, 195, 255);
-      --viz-series-1: rgb(131, 195, 255);
-      --viz-series-2: rgb(245, 154, 86);
-      --viz-series-3: rgb(116, 213, 139);
-      --viz-series-4: rgb(240, 143, 192);
-      --viz-series-5: rgb(170, 145, 239);
-      --viz-series-6: rgb(90, 203, 194);
-    }
-  }
-
   *, *::before, *::after { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  body { margin: 0; padding: 1rem; background: var(--background); color: var(--foreground); font-size: var(--font-size-base); line-height: 1.45; }
+  html { -webkit-text-size-adjust: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  body { margin: 0; padding: 1rem; background: var(--background); color: var(--foreground); font-size: var(--font-size-base); line-height: 1.45; -webkit-font-smoothing: antialiased; }
   button, input { font: inherit; }
-  h2, h3 { font-weight: 500; line-height: 1.25; }
+  h2, h3 { font-weight: 800; line-height: 1.25; color: var(--accent-cyan); }
   h2 { margin: 1.25rem 0 0.5rem; }
-  h3 { font-size: 1.1rem; }
-  strong { font-weight: 500; }
+  h3 { font-size: 1.1rem; font-weight: 700; }
+  strong { font-weight: 700; }
   .standalone-shell { width: 100%; max-width: 1100px; margin: 0 auto; }
   .viz-controls { display: flex; flex-wrap: wrap; gap: 1rem; }
-  .form-label { display: block; color: var(--foreground); }
-  .form-range { display: block; width: 100%; min-height: 44px; margin: 0; accent-color: var(--primary); }
-  .btn { min-height: 44px; padding: 0.55rem 0.9rem; border: 1px solid var(--border); border-radius: 0.65rem; background: var(--secondary); color: var(--secondary-foreground); cursor: pointer; touch-action: manipulation; }
-  .btn[aria-pressed="true"], .btn-primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .form-label { display: block; color: var(--accent-cyan); font-weight: 700; }
+  .form-range { display: block; width: 100%; min-height: 44px; margin: 0; accent-color: var(--accent-cyan); }
+  .btn { min-height: 44px; padding: 0.55rem 0.9rem; border: 2px solid var(--border); border-radius: 0.65rem; background: var(--secondary); color: var(--secondary-foreground); font-weight: 700; cursor: pointer; touch-action: manipulation; -webkit-appearance: none; }
+  .btn:active { background: var(--card); }
+  .btn[aria-pressed="true"], .btn-primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary-border); }
+  .btn[aria-pressed="true"]:active, .btn-primary:active { background: var(--primary-active); }
   .btn-ghost { background: transparent; }
-  .btn:disabled { opacity: 0.55; cursor: default; }
-  .viz-badge { display: inline-flex; align-items: center; min-height: 2rem; padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--accent); color: var(--accent-foreground); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .viz-badge { display: inline-flex; align-items: center; min-height: 2rem; padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--accent); color: var(--accent-foreground); border: 1px solid var(--border); font-weight: 700; }
   .card { padding: 1rem; border: 1px solid var(--border); border-radius: 0.9rem; background: var(--card); color: var(--card-foreground); }
   .form-check { display: flex; align-items: center; gap: 0.65rem; min-height: 44px; }
-  .form-check-input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: var(--primary); flex: 0 0 auto; }
+  .form-check-input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: var(--accent-cyan); flex: 0 0 auto; }
   .form-check-label { flex: 1; padding: 0.55rem 0; cursor: pointer; }
   .text-muted { color: var(--muted-foreground); }
   :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
@@ -170,6 +143,9 @@ function simGoBack(){
       display: block;
       width: 100%;
       aspect-ratio: 4 / 3;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
     }
 
     #taucher-optik-sim .ts-summary {
@@ -427,18 +403,18 @@ function simGoBack(){
 
       function colors() {
         return {
-          background: cssColor('--background', 'Canvas'),
-          foreground: cssColor('--foreground', 'CanvasText'),
-          card: cssColor('--card', 'Canvas'),
-          border: cssColor('--border', 'GrayText'),
-          muted: cssColor('--muted', 'Canvas'),
-          mutedForeground: cssColor('--muted-foreground', 'GrayText'),
-          sky: cssColor('--viz-series-1', 'Highlight'),
-          water: cssColor('--viz-series-6', 'LinkText'),
-          sun: cssColor('--viz-series-2', 'Highlight'),
-          apparent: cssColor('--viz-series-4', 'LinkText'),
-          reflection: cssColor('--viz-series-5', 'GrayText'),
-          plant: cssColor('--viz-series-3', 'CanvasText')
+          background: '#ffffff',
+          foreground: '#22303d',
+          card: '#f4f6f8',
+          border: '#5f7d95',
+          muted: '#eef3f7',
+          mutedForeground: '#6f8aa0',
+          sky: '#5aa9d6',
+          water: '#2a8fb0',
+          sun: '#e08a1e',
+          apparent: '#b8397f',
+          reflection: '#6b46c1',
+          plant: '#009e73'
         };
       }
 
@@ -969,14 +945,35 @@ function simGoBack(){
       function drawSeaPlant(ctx, x, y, height, palette, alpha) {
         ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.strokeStyle = palette.plant;
-        ctx.lineWidth = 2;
-        for (var i = -1; i <= 1; i += 1) {
+        ctx.fillStyle = palette.plant;
+        ctx.lineJoin = 'round';
+        // Büschel aus mehreren schlanken, sich zur Spitze verjüngenden Halmen
+        var blades = [
+          { ang: -0.60, len: 0.70, w: 0.045, bend: -0.30 },
+          { ang: -0.32, len: 0.90, w: 0.055, bend: -0.16 },
+          { ang: -0.06, len: 1.05, w: 0.060, bend: 0.05 },
+          { ang: 0.22, len: 0.95, w: 0.055, bend: 0.20 },
+          { ang: 0.52, len: 0.72, w: 0.048, bend: 0.34 }
+        ];
+        blades.forEach(function (b) {
+          var len = height * b.len;
+          var w = height * b.w;
+          var dirX = Math.sin(b.ang);
+          var dirY = -Math.cos(b.ang);
+          var perpX = Math.cos(b.ang);
+          var perpY = Math.sin(b.ang);
+          var bend = b.bend * height * 0.4;
+          var tipX = x + dirX * len + bend;
+          var tipY = y + dirY * len;
+          var midX = x + dirX * len * 0.5 + bend * 0.55;
+          var midY = y + dirY * len * 0.5;
           ctx.beginPath();
-          ctx.moveTo(x + i * 5, y);
-          ctx.bezierCurveTo(x + i * 9, y - height * 0.35, x - i * 8, y - height * 0.65, x + i * 4, y - height);
-          ctx.stroke();
-        }
+          ctx.moveTo(x - perpX * w, y - perpY * w);
+          ctx.quadraticCurveTo(midX - perpX * w * 0.5, midY - perpY * w * 0.5, tipX, tipY);
+          ctx.quadraticCurveTo(midX + perpX * w * 0.5, midY + perpY * w * 0.5, x + perpX * w, y + perpY * w);
+          ctx.closePath();
+          ctx.fill();
+        });
         ctx.restore();
       }
 
