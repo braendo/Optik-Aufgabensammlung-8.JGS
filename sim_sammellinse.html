@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sammellinse">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>Sammellinse – Simulation</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;-webkit-text-size-adjust:100%;overscroll-behavior:none;touch-action:manipulation}
+input,textarea{-webkit-user-select:text;user-select:text}
+
+/* ── iPad-Launcher (sichtbar in der Schnellansicht) ── */
+#launcher{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#0d1b2a 0%,#1e3a5f 100%);color:#e8f4f8;display:flex;align-items:center;justify-content:center;padding:24px;padding-top:calc(24px + env(safe-area-inset-top));padding-bottom:calc(24px + env(safe-area-inset-bottom));font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+#launcher-inner{max-width:560px;width:100%;background:#112236;border:1px solid #1e3a5f;border-radius:16px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+#launcher h2{font-size:24px;color:#7ec8e3;margin-bottom:6px;font-weight:800}
+#launcher .sub{font-size:14px;color:#8aafc2;margin-bottom:20px}
+#launcher .step{background:#0d1b2a;border-radius:12px;padding:14px 16px;margin-bottom:10px;border-left:4px solid #7ec8e3;font-size:15px;line-height:1.5}
+#launcher .step b{color:#7ec8e3}
+#launcher .num{display:inline-block;background:#7ec8e3;color:#0d1b2a;width:24px;height:24px;border-radius:50%;font-weight:800;text-align:center;line-height:24px;margin-right:8px;font-size:13px}
+#launcher .btn-start{display:block;width:100%;margin-top:16px;padding:16px;font-size:17px;font-weight:800;color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:12px;cursor:pointer;-webkit-appearance:none}
+#launcher .btn-start:active{background:#2a6aaa}
+#launcher .note{font-size:12px;color:#8aafc2;margin-top:14px;text-align:center;line-height:1.5}
+.js-on #launcher{display:none !important}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0d1b2a;color:#e8f4f8}
+#app{display:flex;height:100vh;height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+
+/* ── Sidebar ── */
+#sidebar{width:310px;flex-shrink:0;background:#0d1b2a;border-right:2px solid #1e3a5f;padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+h1{font-size:21px;font-weight:800;color:#7ec8e3;line-height:1.2}
+h1 small{display:block;font-size:12px;font-weight:400;color:#8aafc2;margin-top:2px}
+.cg{background:#112236;border-radius:10px;padding:11px;border:1px solid #1e3a5f}
+.cl{font-size:13px;font-weight:700;color:#7ec8e3;margin-bottom:6px;display:flex;justify-content:space-between;align-items:baseline}
+.cl .v{font-size:17px;font-weight:800;color:#fff}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:8px;border-radius:4px;background:#1e3a5f;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#7ec8e3;border:2px solid #fff;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:#7ec8e3;border:2px solid #fff;cursor:pointer}
+.chk-g,.rad-g{display:flex;flex-direction:column;gap:7px}
+.chk-g label,.rad-g label{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#e8f4f8}
+.chk-g input,.rad-g input{width:22px;height:22px;cursor:pointer;accent-color:#7ec8e3;flex-shrink:0}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ib{background:#071525;border:1px solid #1e3a5f;border-radius:8px;padding:8px}
+.ib .il{font-size:11px;color:#8aafc2;font-weight:600}
+.ib .iv{font-size:18px;font-weight:800;color:#fff}
+.it{background:#071525;border:1px solid #1e3a5f;border-radius:8px;padding:9px;font-size:13px;line-height:1.5;color:#e8f4f8}
+.fw{background:#3a1a1a;border:1px solid #c0392b;border-radius:8px;padding:9px;font-size:13px;color:#ff8a80;font-weight:600}
+.fok{background:#0f2a1a;border:1px solid #27ae60;border-radius:8px;padding:9px;font-size:13px;color:#80ffb0;font-weight:600}
+.btn{width:100%;padding:13px;font-size:16px;font-weight:800;color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:10px;cursor:pointer;-webkit-appearance:none}
+.btn:active{background:#2a6aaa}
+
+/* ── Canvas ── */
+#cw{flex:1;background:#fff;position:relative;min-width:0;min-height:0;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.cm-dot{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.92);border:1px solid #cfd8e0;border-radius:18px;
+  padding:6px 12px 6px 8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#33424f;
+  box-shadow:0 2px 6px rgba(0,0,0,0.14);-webkit-appearance:none}
+.cm-dot:active{background:#eef3f7}
+.cm-swatch{width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,0.22);flex-shrink:0;
+  background:conic-gradient(#0072B2 0 33%,#D55E00 0 66%,#009E73 0)}
+
+/* ── Mode tabs ── */
+#tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#071525;border-radius:10px;padding:4px;border:1px solid #1e3a5f}
+.tab{padding:6px 4px;font-size:11px;font-weight:700;color:#8aafc2;background:transparent;border:none;border-radius:7px;cursor:pointer;text-align:center;line-height:1.2}
+.tab.active{background:#1e4d7a;color:#fff}
+.tab:hover:not(.active){background:#112236;color:#e8f4f8}
+.tab-wide{grid-column:1/-1}
+
+/* ── Messtabelle (Experiment-Modus) ── */
+.bank-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+.bank-table th{color:#8aafc2;font-weight:700;text-align:left;padding:3px 4px;border-bottom:1px solid #1e3a5f}
+.bank-table td{padding:3px 4px;border-bottom:1px solid #10233a;color:#e8f4f8;vertical-align:top}
+.bank-del{background:transparent;border:none;color:#ff8a80;font-size:16px;line-height:1;cursor:pointer;padding:0 4px;-webkit-appearance:none}
+.bank-empty{font-size:12px;color:#8aafc2;font-style:italic;padding:4px 2px 0}
+.je-blank{color:#7ec8e3;font-weight:800}
+
+/* ── Task cards ── */
+.task{background:#112236;border-radius:10px;padding:11px;border:1px solid #1e3a5f;display:flex;flex-direction:column;gap:6px}
+.task-h{font-size:13px;font-weight:800;color:#7ec8e3;display:flex;justify-content:space-between;align-items:center}
+.task-h .step-nav{display:flex;gap:4px}
+.task-h .nav-b{width:28px;height:28px;border:1px solid #3a7abf;background:#1e4d7a;color:#fff;border-radius:6px;cursor:pointer;font-weight:800;font-size:14px}
+.task-h .nav-b:disabled{opacity:0.3;cursor:not-allowed}
+.task-q{font-size:13px;line-height:1.5;color:#e8f4f8}
+.task-q b{color:#7ec8e3}
+.task-hint{font-size:12px;line-height:1.4;color:#8aafc2;font-style:italic;border-left:3px solid #1e4d7a;padding-left:8px}
+
+/* Prediction inputs */
+.pred-row{display:flex;gap:6px;flex-wrap:wrap}
+.pred-row button{flex:1;min-width:0;padding:10px 6px;font-size:12px;font-weight:700;background:#071525;color:#e8f4f8;border:2px solid #1e3a5f;border-radius:8px;cursor:pointer;-webkit-appearance:none}
+.pred-row button:hover:not(:disabled){border-color:#3a7abf;background:#112236}
+.pred-row button.sel{border-color:#7ec8e3;background:#1e4d7a;color:#fff}
+.pred-row button:disabled{opacity:0.5;cursor:not-allowed}
+.pred-row button.correct{border-color:#27ae60;background:#0f2a1a;color:#80ffb0}
+.pred-row button.wrong{border-color:#c0392b;background:#3a1a1a;color:#ff8a80}
+.pred-label{font-size:11px;color:#8aafc2;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px}
+
+.note-field{width:100%;background:#071525;border:1px solid #1e3a5f;border-radius:8px;padding:8px;color:#e8f4f8;font-family:inherit;font-size:13px;resize:vertical;min-height:50px;line-height:1.4}
+.note-field:focus{outline:none;border-color:#7ec8e3}
+
+.feedback{padding:10px;border-radius:8px;font-size:13px;line-height:1.5;font-weight:600}
+.fb-ok{background:#0f2a1a;border:1px solid #27ae60;color:#80ffb0}
+.fb-err{background:#3a1a1a;border:1px solid #c0392b;color:#ff8a80}
+.fb-info{background:#0d2438;border:1px solid #3a7abf;color:#9ed4f0}
+
+/* Action buttons */
+.btn-sm{padding:9px 12px;font-size:13px;font-weight:700;color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:8px;cursor:pointer;-webkit-appearance:none}
+.btn-sm:active{background:#2a6aaa}
+.btn-sm:disabled{opacity:0.4;cursor:not-allowed}
+.btn-sm.secondary{background:transparent;color:#8aafc2}
+
+.preset-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.preset-row .btn-sm{padding:8px 4px;font-size:12px}
+
+/* Hidden helper */
+.hidden{display:none !important}
+
+/* Step indicator */
+.step-pill{display:inline-block;background:#1e4d7a;color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;margin-right:6px}
+
+/* Portrait layout */
+@media (max-aspect-ratio:1/1){
+  #app{flex-direction:column}
+  #sidebar{width:100%;flex-shrink:0;border-right:none;border-bottom:2px solid #1e3a5f;max-height:50vh;overflow-y:auto}
+  #cw{flex:1;min-height:300px}
+}
+</style>
+</head>
+<body>
+<!-- ══════════ iPad-Launcher (sichtbar in Schnellansicht-Modus) ══════════ -->
+<div id="launcher">
+  <div id="launcher-inner">
+    <h2>Sammellinse-Simulation</h2>
+    <div class="sub">Physik 8. Klasse · Interaktive Lernumgebung</div>
+
+    <div class="step"><span class="num">1</span>Du siehst diesen Hinweis, weil die Datei gerade in der <b>iPad-Schnellansicht</b> geöffnet wurde. Dort funktioniert die Simulation nicht.</div>
+
+    <div class="step"><span class="num">2</span>Tippe oben rechts auf <b>„Teilen"</b> → scrolle im Menü nach unten → wähle <b>„In Safari öffnen"</b> oder <b>„Mit Safari öffnen"</b>.</div>
+
+    <div class="step"><span class="num">3</span>Alternative: Lege die Datei in <b>iCloud Drive</b> ab. Öffne sie von dort mit langem Tippen → <b>„Teilen"</b> → <b>Safari</b>.</div>
+
+    <button class="btn-start" onclick="window.location.reload()">Erneut versuchen</button>
+
+    <div class="note">Wenn Safari die Datei direkt geöffnet hat, solltest du diesen Hinweis nicht sehen. In dem Fall: Seite neu laden.</div>
+  </div>
+</div>
+
+<script>
+// Sobald JS läuft, sind wir in einem echten Browser (nicht in der Schnellansicht).
+// Der Launcher wird automatisch ausgeblendet.
+document.documentElement.classList.add('js-on');
+</script>
+<div id="app">
+  <div id="sidebar">
+    <h1>Sammellinse<small>Physik 8. Klasse – Lernumgebung</small></h1>
+
+    <div id="tabs">
+      <button class="tab tab-wide active" data-mode="bank">Experiment</button>
+      <button class="tab" data-mode="construct">Konstruktion</button>
+      <button class="tab" data-mode="free">Erkunden</button>
+      <button class="tab" data-mode="predict">Vorhersagen</button>
+      <button class="tab" data-mode="diy">Jetzt du!</button>
+    </div>
+
+    <!-- Common controls (always visible) -->
+    <div class="cg" id="cgG">
+      <div class="cl">Gegenstandsweite g <span class="v" id="dg">7.0 cm</span></div>
+      <input type="range" id="slg" min="0.5" max="14" step="0.1" value="7.0">
+    </div>
+
+    <div class="cg" id="cgF">
+      <div class="cl">Brennweite f <span class="v" id="df">3.0 cm</span></div>
+      <input type="range" id="slf" min="1.5" max="6" step="0.1" value="3.0">
+    </div>
+
+    <!-- ══════════ MODE: BANK („Experiment" – virtuelle optische Bank) ══════════ -->
+    <div id="mode-bank">
+      <div class="ig" id="bank-tiles">
+        <div class="ib" id="bank-g-tile"><div class="il">Gegenstandsweite g</div><div class="iv" id="bank-g-val">–</div></div>
+        <div class="ib" id="bank-f-tile"><div class="il">Brennweite f</div><div class="iv" id="bank-f-val">–</div></div>
+      </div>
+      <div class="task">
+        <div class="task-h">
+          <span><span class="step-pill" id="bank-num">1/4</span><span id="bank-title">Experiment</span></span>
+          <div class="step-nav">
+            <button class="nav-b" id="bank-prev">‹</button>
+            <button class="nav-b" id="bank-next">›</button>
+          </div>
+        </div>
+        <div class="task-q" id="bank-task">…</div>
+        <div class="task-hint" id="bank-hint">…</div>
+
+        <!-- Beobachtung ankreuzen (nur Auftrag 2) – Begriffe wie im Arbeitsblatt -->
+        <div id="bank-obs" class="hidden">
+          <div class="pred-label">Bildgröße</div>
+          <div class="pred-row" id="bank-obs-size">
+            <button data-v="vergrößert">vergrößert</button>
+            <button data-v="gleich groß">gleich groß</button>
+            <button data-v="verkleinert">verkleinert</button>
+          </div>
+          <div class="pred-label" style="margin-top:6px">Ausrichtung</div>
+          <div class="pred-row" id="bank-obs-orient">
+            <button data-v="umgekehrt">umgekehrt</button>
+            <button data-v="aufrecht">aufrecht</button>
+          </div>
+          <div class="pred-label" style="margin-top:6px">Bildart</div>
+          <div class="pred-row" id="bank-obs-type">
+            <button data-v="reell">reell</button>
+            <button data-v="virtuell">virtuell</button>
+          </div>
+        </div>
+
+        <button class="btn-sm" id="bank-take" disabled>Messwert übernehmen</button>
+        <div id="bank-fb"></div>
+
+        <!-- Je-desto-Baustein (erscheint in Auftrag 3 nach 3 Messwerten) -->
+        <div id="bank-jedesto" class="hidden">
+          <div class="pred-label">Vervollständige den Satz</div>
+          <div class="task-q" style="margin:2px 0 4px">Je näher die Kerze an die Linse rückt (aber g &gt; f), desto <span class="je-blank" id="je-b-slot">___</span> wird die Bildweite b und desto <span class="je-blank" id="je-s-slot">___</span> das Bild.</div>
+          <div class="pred-label">Bildweite b</div>
+          <div class="pred-row" id="je-b"><button data-v="größer">größer</button><button data-v="kleiner">kleiner</button></div>
+          <div class="pred-label" style="margin-top:6px">Bild</div>
+          <div class="pred-row" id="je-s"><button data-v="größer">größer</button><button data-v="kleiner">kleiner</button></div>
+          <button class="btn-sm" id="je-check" style="margin-top:6px">Satz prüfen</button>
+          <div id="je-fb"></div>
+        </div>
+      </div>
+
+      <div class="cg" id="bank-cone-wrap">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#e8f4f8">
+          <input type="checkbox" id="bank-cone" style="width:22px;height:22px;accent-color:#7ec8e3;flex-shrink:0">Lichtkegel zeigen
+        </label>
+      </div>
+
+      <div class="cg" id="bank-table-wrap">
+        <div class="cl">Messtabelle</div>
+        <table class="bank-table">
+          <thead><tr><th>g</th><th>b</th><th>Bildgröße</th><th>Beobachtung</th><th></th></tr></thead>
+          <tbody id="bank-table-body"></tbody>
+        </table>
+        <div class="bank-empty" id="bank-table-empty">Noch keine Messwerte übernommen.</div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE: FREE ══════════ -->
+    <div id="mode-free" class="hidden">
+      <button class="btn" id="btnR">↺ Zurücksetzen</button>
+
+      <div class="ig">
+        <div class="ib"><div class="il">Gegenstandsweite g</div><div class="iv" id="vg">–</div></div>
+        <div class="ib"><div class="il">Brennweite f</div><div class="iv" id="vf">–</div></div>
+        <div class="ib"><div class="il">Bildweite b</div><div class="iv" id="vb">–</div></div>
+        <div class="ib"><div class="il">Vergrößerung</div><div class="iv" id="vm">–</div></div>
+      </div>
+      <div class="it" id="vi"></div>
+      <div id="vfocus"></div>
+      <div class="it" id="ve"></div>
+
+      <div class="cg">
+        <div class="cl">Konstruktionsstrahlen</div>
+        <div class="chk-g">
+          <label><input type="checkbox" id="cbPar" checked><span style="color:#0072B2;font-weight:700">━</span> Parallelstrahl</label>
+          <label><input type="checkbox" id="cbFP"  checked><span style="color:#D55E00;font-weight:700">╌</span> Brennpunktstrahl</label>
+          <label><input type="checkbox" id="cbMid" checked><span style="color:#009E73;font-weight:700">┄</span> Mittelpunktstrahl</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE: PREDICT ══════════ -->
+    <div id="mode-predict" class="hidden">
+      <div class="task">
+        <div class="task-h">
+          <span><span class="step-pill" id="pred-num">1/5</span>Vorhersage</span>
+          <div class="step-nav">
+            <button class="nav-b" id="pred-prev">‹</button>
+            <button class="nav-b" id="pred-next">›</button>
+          </div>
+        </div>
+        <div class="task-q" id="pred-task">…</div>
+        <div class="task-hint" id="pred-hint">…</div>
+
+        <div>
+          <div class="pred-label">Bildart</div>
+          <div class="pred-row" id="pred-type">
+            <button data-v="reell">reell</button>
+            <button data-v="virtuell">virtuell</button>
+            <button data-v="kein">kein Bild</button>
+          </div>
+        </div>
+        <div>
+          <div class="pred-label">Orientierung</div>
+          <div class="pred-row" id="pred-orient">
+            <button data-v="aufrecht">aufrecht</button>
+            <button data-v="umgekehrt">umgekehrt</button>
+          </div>
+        </div>
+        <div>
+          <div class="pred-label">Bildgröße</div>
+          <div class="pred-row" id="pred-size">
+            <button data-v="vergrößert">größer</button>
+            <button data-v="gleich groß">gleich</button>
+            <button data-v="verkleinert">kleiner</button>
+          </div>
+        </div>
+
+        <button class="btn-sm" id="pred-check">Vorhersage prüfen</button>
+        <div id="pred-fb"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE: CONSTRUCT ══════════ -->
+    <div id="mode-construct" class="hidden">
+      <div class="task">
+        <div class="task-h">
+          <span><span class="step-pill" id="con-num">1/5</span>Bildkonstruktion</span>
+          <div class="step-nav">
+            <button class="nav-b" id="con-prev">‹</button>
+            <button class="nav-b" id="con-next">›</button>
+          </div>
+        </div>
+        <div class="task-q" id="con-task">…</div>
+        <div class="task-hint" id="con-hint">…</div>
+        <div id="con-extra"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ MODE: DIY („Jetzt du!") ══════════ -->
+    <div id="mode-diy" class="hidden">
+      <div class="task">
+        <div class="task-h">
+          <span><span class="step-pill" id="diy-num">1/4</span>Selbst konstruieren</span>
+          <div class="step-nav">
+            <button class="nav-b" id="diy-prev">‹</button>
+            <button class="nav-b" id="diy-next">›</button>
+          </div>
+        </div>
+        <div class="task-q" id="diy-task">…</div>
+        <div class="task-hint" id="diy-hint">…</div>
+        <div id="diy-fb"></div>
+        <button class="btn-sm hidden" id="diy-check">Zeichnung prüfen</button>
+        <button class="btn-sm secondary" id="diy-reset">↺ Nochmal üben</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="cw"><canvas id="c"></canvas>
+    <button id="cmDot" class="cm-dot" title="Farbmodus umschalten: farbenblind-freundlich ↔ Standard" aria-label="Farbmodus umschalten">
+      <span class="cm-swatch"></span><span class="cm-txt">Farben</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Physics ──────────────────────────────────────────────────────────────────
+const H = 2.0, NG = 1.517, EPS = 0.06;
+
+function computeB(g, f) {
+  return Math.abs(g - f) < EPS ? null : (f * g) / (g - f);
+}
+
+function classify(g, f) {
+  const b = computeB(g, f);
+  if (b === null) return { b: null };
+  const ih = -H * b / g;
+  const mag = Math.abs(ih / H);
+  return {
+    b, imgX: b, imgH: ih,
+    type:   b > 0 ? 'reell' : 'virtuell',
+    orient: ih * H < 0 ? 'umgekehrt' : 'aufrecht',
+    size:   mag > 1.05 ? 'vergrößert' : mag < 0.95 ? 'verkleinert' : 'gleich groß',
+    mag,
+  };
+}
+
+function explain(g, f, b) {
+  if (b === null) return 'Gegenstand im Brennpunkt: Strahlen laufen nach der Linse parallel → kein Bild.';
+  if (b > 0) {
+    if (g > 2*f + 0.25) return 'g > 2F: Bild reell, umgekehrt, verkleinert. Beispiel: Kamera.';
+    if (Math.abs(g - 2*f) <= 0.25) return 'g = 2F: Bild reell, umgekehrt, gleich groß. (b = g = 2f)';
+    return 'F < g < 2F: Bild reell, umgekehrt, vergrößert. Beispiel: Projektor.';
+  }
+  return 'g < F: Bild virtuell, aufrecht, vergrößert. Beispiel: Lupe.';
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+const DEF = { g:7, f:3, par:true, fp:true, mid:true, cm:'cbf', ls:'elliptic' };
+let S = {...DEF};
+// Vorhersage-Modus: solange true, wird ALLES Ergebnis-hafte (Bildpfeil,
+// gebrochene Strahlen, Rückverlängerungen, "Kein Bild"-Kasten) unterdrückt –
+// sichtbar bleiben nur Aufbau + einfallende Strahlen bis zur Linse.
+let SUPPRESS_IMAGE = false;
+// "Jetzt du!"-Modus: verdeckt das Ergebnis genauso, aber OHNE den weißen
+// Vorhang rechts (dort zeichnen die Schüler ja selbst).
+let HIDE_RESULT = false;
+
+// ── Canvas ───────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const wrap   = document.getElementById('cw');
+let cW = 800, cH = 500;
+
+const WX0=-14, WX1=14, WY0=-8.5, WY1=8.5;
+function wx(x){ return (x-WX0)/(WX1-WX0)*cW }
+function wy(y){ return (1-(y-WY0)/(WY1-WY0))*cH }
+function ws(s){ return s/(WX1-WX0)*cW }
+
+const THEMES = {
+  cbf:      { par:'#0072B2', fp:'#D55E00', mid:'#009E73' },
+  standard: { par:'#ef5350', fp:'#e6b800', mid:'#66bb6a' },
+};
+
+// ── Drawing helpers ──────────────────────────────────────────────────────────
+function seg(x0,y0,x1,y1,col,w=2,dash=[]){
+  ctx.save();
+  ctx.strokeStyle=col; ctx.lineWidth=w; ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(wx(x0),wy(y0)); ctx.lineTo(wx(x1),wy(y1)); ctx.stroke();
+  ctx.restore();
+}
+
+function arrowHead(x,y,up,col){
+  const aw=ws(0.32), ah=ws(0.48);
+  const px=wx(x), py=wy(y), d=up?1:-1;
+  ctx.save(); ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.moveTo(px,py);
+  ctx.lineTo(px-aw, py+d*ah);
+  ctx.lineTo(px+aw, py+d*ah);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function vArrow(x,y0,y1,col,dashed=false){
+  seg(x,y0,x,y1,col,3,dashed?[7,4]:[]);
+  arrowHead(x,y1,y1>y0,col);
+}
+
+function txt(str,x,y,{size=13,col='#222',align='left',bg=null}={}){
+  ctx.save();
+  ctx.font=`bold ${size}px -apple-system,Arial`;
+  ctx.textAlign=align; ctx.textBaseline='middle';
+  const px=wx(x), py=wy(y);
+  if(bg){
+    const m=ctx.measureText(str);
+    ctx.fillStyle=bg;
+    ctx.fillRect(px-(align==='center'?m.width/2:0)-3, py-size/2-2, m.width+6, size+4);
+  }
+  ctx.fillStyle=col;
+  ctx.fillText(str,px,py);
+  ctx.restore();
+}
+
+// ── Lens shape ───────────────────────────────────────────────────────────────
+function drawLens(f, shape, showLabel=true){
+  const r=2*(NG-1)*f, av=6, N=100;
+  const pr=[], pl=[];
+
+  if(shape==='elliptic'){
+    const ap=1.4;
+    const dc=2*(r-Math.sqrt(r*r-ap*ap));
+    for(let i=0;i<=N;i++){
+      const y=-av+2*av*i/N;
+      const xr=(dc/2)*Math.sqrt(Math.max(1-(y/av)**2,0));
+      pr.push([xr,y]); pl.push([-xr,y]);
+    }
+  } else {
+    const as=Math.min(av*0.85, r*0.92);
+    const dc=2*(r-Math.sqrt(Math.max(r*r-as*as,1e-9)));
+    for(let i=0;i<=N;i++){
+      const y=-av+2*av*i/N;
+      const yp=y*(as/av);
+      const sq=Math.sqrt(Math.max(r*r-yp*yp,0));
+      pr.push([(dc/2)-r+sq, y]);
+      pl.push([-(dc/2)+r-sq, y]);
+    }
+  }
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(wx(pl[0][0]),wy(pl[0][1]));
+  for(const [x,y] of pl) ctx.lineTo(wx(x),wy(y));
+  for(const [x,y] of [...pr].reverse()) ctx.lineTo(wx(x),wy(y));
+  ctx.closePath();
+  ctx.fillStyle='rgba(77,208,225,0.18)';
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=2.5;
+  ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  // top/bottom arrows
+  vArrow(0, av, av+0.85, '#4dd0e1');
+  vArrow(0,-av,-av-0.85, '#4dd0e1');
+
+  // info label
+  if(showLabel){
+    const ap2 = shape==='elliptic' ? 1.4 : Math.min(av*0.85, r*0.92);
+    const dc2  = 2*(r-Math.sqrt(Math.max(r*r-ap2*ap2,1e-9)));
+    txt(`R=${r.toFixed(1)} cm  d=${dc2.toFixed(2)} cm  n=${NG}`,
+        0.3, -(av+0.45), {size:11, col:'#333', bg:'rgba(255,255,255,0.9)'});
+  }
+}
+
+// ── Main draw ────────────────────────────────────────────────────────────────
+function draw(){
+  ctx.clearRect(0,0,cW,cH);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cW,cH);
+
+  // grid
+  ctx.save(); ctx.strokeStyle='#e8edf2'; ctx.lineWidth=1;
+  for(let x=Math.ceil(WX0);x<=WX1;x++){ctx.beginPath();ctx.moveTo(wx(x),0);ctx.lineTo(wx(x),cH);ctx.stroke()}
+  for(let y=Math.ceil(WY0);y<=WY1;y++){ctx.beginPath();ctx.moveTo(0,wy(y));ctx.lineTo(cW,wy(y));ctx.stroke()}
+  ctx.restore();
+
+  // axis
+  seg(WX0,0,WX1,0,'#aaa',1.5);
+
+  // axis ticks & labels
+  ctx.save();
+  ctx.fillStyle='#888'; ctx.font=`${Math.max(10,ws(0.7))}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let x=-12;x<=12;x+=2){
+    const px=wx(x), py=wy(0);
+    ctx.beginPath(); ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
+    ctx.moveTo(px,py-4); ctx.lineTo(px,py+4); ctx.stroke();
+    if(x!==0) ctx.fillText(x, px, py+6);
+  }
+  ctx.restore();
+
+  // title
+  ctx.save();
+  ctx.font=`bold ${Math.max(13,ws(1))}px -apple-system,Arial`;
+  ctx.fillStyle='#222'; ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('Strahlengang an der Sammellinse', cW/2, 6);
+  ctx.restore();
+
+  drawLens(S.f, S.ls);
+
+  // focal markers
+  for(const [fx, lbl] of [[-S.f,'F'],[S.f,'F'],[-2*S.f,'2F'],[2*S.f,'2F']]){
+    const col=Math.abs(fx)<=S.f+0.01?'#4dd0e1':'#6688aa';
+    const px=wx(fx),py=wy(0),s=ws(0.33);
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px-s,py-s); ctx.lineTo(px+s,py+s);
+    ctx.moveTo(px+s,py-s); ctx.lineTo(px-s,py+s); ctx.stroke(); ctx.restore();
+    txt(lbl, fx, -0.65, {size:13, col:'#333', align:'center', bg:'rgba(255,255,255,0.85)'});
+  }
+
+  const res  = classify(S.g, S.f);
+  const ox   = -S.g;
+  const th   = THEMES[S.cm] || THEMES.cbf;
+  const XFAR = WX1-0.3;
+  const HIDDEN = SUPPRESS_IMAGE || HIDE_RESULT;   // Ergebnis verdeckt (Vorhersage / Jetzt du!)
+
+  // object
+  vArrow(ox, 0, H, '#ff9800');
+  txt('G', ox-0.45, H/2, {size:16, col:'#222', align:'center', bg:'rgba(255,255,255,0.85)'});
+
+  if(res.b === null){
+    // no image
+    if(S.par){
+      seg(ox,H,0,H,th.par,2.2);
+      if(!HIDDEN) seg(0,H,XFAR,H+(-H/S.f)*XFAR,th.par,2.2);
+    }
+    if(S.mid){
+      const s=H/ox;
+      seg(ox,H,0,0,th.mid,2.2,[5,4]);
+      if(!HIDDEN) seg(0,0,XFAR,s*XFAR,th.mid,2.2,[5,4]);
+    }
+    if(!HIDDEN){
+      ctx.save();
+      ctx.fillStyle='rgba(255,230,230,0.95)'; ctx.strokeStyle='#c0392b'; ctx.lineWidth=1;
+      const lw=ws(5.2), lh=ws(1.1);
+      ctx.fillRect(wx(0)-lw/2, wy(2.8)-lh/2, lw, lh);
+      ctx.strokeRect(wx(0)-lw/2, wy(2.8)-lh/2, lw, lh);
+      ctx.restore();
+      txt('Kein Bild (g = f)', 0, 2.8, {size:14, col:'#c0392b', align:'center'});
+    }
+
+  } else {
+    const {b, imgX, imgH} = res;
+    const xEnd = b>0 ? Math.min(imgX+1.8, XFAR) : XFAR;
+
+    // parallel ray
+    if(S.par){
+      const s1=-H/S.f;
+      seg(ox,H,0,H, th.par,2.2);
+      if(!HIDDEN){
+        seg(0,H,xEnd,H+s1*xEnd, th.par,2.2);
+        if(b<0) seg(0,H,imgX,imgH, th.par,1.5,[6,4]);
+      }
+    }
+
+    // focal point ray
+    if(S.fp){
+      const denom=ox+S.f;
+      if(Math.abs(denom)>0.05){
+        const yl=(H/denom)*S.f;
+        if(S.g>S.f){
+          seg(ox,H,-S.f,0, th.fp,2.2,[8,4]);
+          seg(-S.f,0,0,yl,  th.fp,2.2,[8,4]);
+        } else {
+          seg(ox,H,0,yl,   th.fp,2.2,[8,4]);
+          seg(ox,H,-S.f,0, th.fp,1.2,[4,4]);
+        }
+        if(!HIDDEN){
+          seg(0,yl,xEnd,yl, th.fp,2.2,[8,4]);
+          if(b<0) seg(0,yl,imgX,imgH, th.fp,1.5,[6,4]);
+        }
+      }
+    }
+
+    // midpoint ray
+    if(S.mid){
+      const s=H/ox;
+      seg(ox,H,0,0,     th.mid,2.2,[5,4]);
+      if(!HIDDEN) seg(0,0,xEnd,s*xEnd, th.mid,2.2,[5,4]);
+    }
+
+    // image
+    if(!HIDDEN){
+      if(b>0){
+        vArrow(imgX,0,imgH,'#9c27b0');
+        txt('B', imgX+0.38, imgH/2, {size:16, col:'#222', bg:'rgba(255,255,255,0.85)'});
+      } else {
+        vArrow(imgX,0,imgH,'#00897b',true);
+        txt('B (virtuell)', imgX-0.3, imgH/2, {size:13, col:'#222', align:'right', bg:'rgba(255,255,255,0.85)'});
+      }
+    }
+  }
+
+  // legend
+  drawLegend(th);
+
+  updateSidebar(res);
+}
+
+function drawLegend(th){
+  const items=[];
+  if(S.par) items.push({c:th.par, d:[],    l:'Parallelstrahl'});
+  if(S.fp)  items.push({c:th.fp,  d:[8,4], l:'Brennpunktstrahl'});
+  if(S.mid) items.push({c:th.mid, d:[5,4], l:'Mittelpunktstrahl'});
+  if(!items.length) return;
+
+  const lx=cW-8, ty=8;
+  const bw=160, rh=22, pad=10;
+  const bh=items.length*rh+pad;
+
+  ctx.save();
+  ctx.fillStyle='rgba(255,255,255,0.92)';
+  ctx.strokeStyle='#ccc'; ctx.lineWidth=1;
+  ctx.fillRect(lx-bw,ty,bw,bh);
+  ctx.strokeRect(lx-bw,ty,bw,bh);
+
+  items.forEach(({c,d,l},i)=>{
+    const ly=ty+pad/2+rh*i+rh/2;
+    ctx.strokeStyle=c; ctx.lineWidth=2.5; ctx.setLineDash(d);
+    ctx.beginPath(); ctx.moveTo(lx-bw+8,ly); ctx.lineTo(lx-bw+38,ly); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#333';
+    ctx.font='bold 12px -apple-system,Arial';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(l, lx-bw+44, ly);
+  });
+  ctx.restore();
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function updateSidebar(res){
+  document.getElementById('dg').textContent=S.g.toFixed(1)+' cm';
+  document.getElementById('df').textContent=S.f.toFixed(1)+' cm';
+  document.getElementById('vg').textContent=S.g.toFixed(1)+' cm';
+  document.getElementById('vf').textContent=S.f.toFixed(1)+' cm';
+
+  const fEl=document.getElementById('vfocus');
+  if(res.b===null){
+    document.getElementById('vb').textContent='kein Bild';
+    document.getElementById('vm').textContent='–';
+    document.getElementById('vi').textContent='Sonderfall: g = f (Gegenstand im Brennpunkt)';
+    fEl.className='fw';
+    fEl.textContent='g = f: Strahlen laufen parallel. Kein Bild entsteht.';
+  } else {
+    document.getElementById('vb').textContent=(res.b>0?'+':'')+res.b.toFixed(1)+' cm';
+    document.getElementById('vm').textContent=res.mag.toFixed(2)+'×';
+    document.getElementById('vi').textContent=`Bild: ${res.type} | ${res.orient} | ${res.size}`;
+    fEl.className='fok';
+    fEl.textContent='Tipp: Vergleiche g mit F und 2F für den Bildcharakter.';
+  }
+  document.getElementById('ve').textContent=explain(S.g,S.f,res.b);
+}
+
+// ── Events ───────────────────────────────────────────────────────────────────
+document.getElementById('slg').addEventListener('input',e=>{S.g=+e.target.value;draw()});
+document.getElementById('slf').addEventListener('input',e=>{S.f=+e.target.value;draw()});
+document.getElementById('cbPar').addEventListener('change',e=>{S.par=e.target.checked;draw()});
+document.getElementById('cbFP' ).addEventListener('change',e=>{S.fp =e.target.checked;draw()});
+document.getElementById('cbMid').addEventListener('change',e=>{S.mid=e.target.checked;draw()});
+
+// Farbmodus-Umschalter als anklickbarer Punkt in der Ecke der Zeichenfläche
+function updateCmDot(){
+  const th = THEMES[S.cm] || THEMES.cbf;
+  const sw = document.querySelector('#cmDot .cm-swatch');
+  if(sw) sw.style.background = `conic-gradient(${th.par} 0 33%, ${th.fp} 0 66%, ${th.mid} 0)`;
+}
+document.getElementById('cmDot').addEventListener('click',()=>{
+  S.cm = (S.cm === 'cbf') ? 'standard' : 'cbf';
+  updateCmDot();
+  draw();
+});
+updateCmDot();
+
+document.getElementById('btnR').addEventListener('click',()=>{
+  S={...DEF};
+  document.getElementById('slg').value=S.g;
+  document.getElementById('slf').value=S.f;
+  document.getElementById('cbPar').checked=S.par;
+  document.getElementById('cbFP' ).checked=S.fp;
+  document.getElementById('cbMid').checked=S.mid;
+  updateCmDot();
+  draw();
+});
+
+// ── Resize ───────────────────────────────────────────────────────────────────
+function resize(){
+  const dpr=window.devicePixelRatio||1;
+  const r=wrap.getBoundingClientRect();
+  cW=r.width; cH=r.height;
+  canvas.width=cW*dpr; canvas.height=cH*dpr;
+  canvas.style.width=cW+'px'; canvas.style.height=cH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+}
+
+new ResizeObserver(resize).observe(wrap);
+resize();
+
+// ════════════════════════════════════════════════════════════════════════════
+// DIDAKTISCHE ERWEITERUNG: Modi + Aufgaben
+// ════════════════════════════════════════════════════════════════════════════
+
+// State for didactic modes
+let MODE = 'free';
+let FORCE_RAYS = null;         // {par, fp, mid} forces ray visibility (construct mode)
+
+// ── Entkopplung der Modi ─────────────────────────────────────────────────────
+// Jeder Modus merkt sich seine eigenen Regler-/Strahlen-Einstellungen und den
+// zuletzt bearbeiteten Aufgaben-Index. Moduswechsel verändern einander nicht.
+const MODE_SNAP = {};
+function snapControls(){ return {g:S.g, f:S.f, par:S.par, fp:S.fp, mid:S.mid}; }
+function applyControls(c){ S.g=c.g; S.f=c.f; S.par=c.par; S.fp=c.fp; S.mid=c.mid; syncControls(); }
+function syncControls(){
+  document.getElementById('slg').value = S.g;
+  document.getElementById('slf').value = S.f;
+  document.getElementById('cbPar').checked = S.par;
+  document.getElementById('cbFP').checked  = S.fp;
+  document.getElementById('cbMid').checked = S.mid;
+}
+function setSlidersLocked(lock){
+  document.getElementById('slg').disabled = lock;
+  document.getElementById('slf').disabled = lock;
+}
+
+// Hook into the existing draw() function by intercepting before image draw.
+// We patch by overriding the drawing of object/rays/image after main draw.
+// Cleanest: re-call draw() and conditionally clear right half – but simpler:
+// we set state flags that the existing draw uses. So we patch draw().
+
+const _origDraw = draw;
+draw = function(){
+  // Experiment-Modus: komplett eigener Renderer, damit weder Bildpfeil noch
+  // F/2F-Marker oder Linsenlabel „durchleaken" (das Scharfstellen soll ja
+  // gerade selbst gefunden werden). Early-return VOR _origDraw().
+  if(MODE==='bank'){ drawBank(); return; }
+  // Apply forced rays if construct mode dictates
+  if(FORCE_RAYS){
+    S.par = FORCE_RAYS.par;
+    S.fp  = FORCE_RAYS.fp;
+    S.mid = FORCE_RAYS.mid;
+    document.getElementById('cbPar').checked = S.par;
+    document.getElementById('cbFP').checked  = S.fp;
+    document.getElementById('cbMid').checked = S.mid;
+  }
+  _origDraw();
+  // In predict mode (before check): cover the image area with white rectangle
+  if(SUPPRESS_IMAGE){
+    ctx.save();
+    // Cover everything to the right of the lens (where image would appear)
+    // and also the readout text would have been overdrawn already; we just
+    // hide the image arrow by drawing white over the right side beyond the lens.
+    const x0 = wx(0.15);
+    ctx.fillStyle = 'rgba(255,255,255,1)';
+    ctx.fillRect(x0, 0, cW-x0, cH);
+    // re-draw axis on right side, without ticks for clarity
+    ctx.strokeStyle='#aaa'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x0, wy(0)); ctx.lineTo(cW, wy(0)); ctx.stroke();
+    // Hint text
+    ctx.fillStyle='#7ec8e3';
+    ctx.font='bold 16px -apple-system,Arial';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('Triff erst deine Vorhersage!', (x0+cW)/2, cH/2 - 10);
+    ctx.font='13px -apple-system,Arial';
+    ctx.fillStyle='#888';
+    ctx.fillText('Klicke dann „Vorhersage prüfen"', (x0+cW)/2, cH/2 + 14);
+    ctx.restore();
+  }
+  // "Jetzt du!"-Ebene: Schüler-Strahlen, Griffe, Bildpunkt-Marker
+  if(MODE==='diy' && DIY && !DIY.solved) drawDiy();
+};
+
+// Suppress the sidebar values in predict mode too
+const _origUpdateSidebar = updateSidebar;
+updateSidebar = function(res){
+  if(SUPPRESS_IMAGE || HIDE_RESULT){
+    document.getElementById('dg').textContent=S.g.toFixed(1)+' cm';
+    document.getElementById('df').textContent=S.f.toFixed(1)+' cm';
+    document.getElementById('vg').textContent=S.g.toFixed(1)+' cm';
+    document.getElementById('vf').textContent=S.f.toFixed(1)+' cm';
+    document.getElementById('vb').textContent='?';
+    document.getElementById('vm').textContent='?';
+    document.getElementById('vi').textContent = SUPPRESS_IMAGE
+      ? 'Verdeckt – sage zuerst voraus!'
+      : 'Verdeckt – konstruiere zuerst selbst!';
+    document.getElementById('vfocus').className='';
+    document.getElementById('vfocus').textContent='';
+    document.getElementById('ve').textContent='';
+  } else {
+    _origUpdateSidebar(res);
+  }
+};
+
+// ── Mode switching ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>switchMode(t.dataset.mode));
+});
+
+function switchMode(mode){
+  if(mode === MODE) return;
+  if(MODE==='bank'){ bankClearTimer(); bankDrag = null; }
+  MODE_SNAP[MODE] = snapControls();
+  MODE = mode;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
+  ['bank','free','predict','construct','diy'].forEach(m=>{
+    document.getElementById('mode-'+m).classList.toggle('hidden', m!==mode);
+  });
+  // Reset modal state
+  SUPPRESS_IMAGE = false;
+  HIDE_RESULT = false;
+  FORCE_RAYS = null;
+  setSlidersLocked(false);
+  document.getElementById('cgG').classList.remove('hidden');   // Regler gehören den anderen Modi
+  document.getElementById('cgF').classList.remove('hidden');
+  if(mode==='bank'){
+    loadBankTask(bankIdx);                // eigener Fortschritt bleibt erhalten
+  } else if(mode==='predict'){
+    loadPredictTask(predictIdx);          // eigener Fortschritt bleibt erhalten
+  } else if(mode==='construct'){
+    loadConstructTask(constructIdx);      // eigener Fortschritt bleibt erhalten
+  } else if(mode==='diy'){
+    loadDiyTask(diyIdx);                  // eigener Fortschritt bleibt erhalten
+  } else {
+    applyControls(MODE_SNAP.free || {g:DEF.g, f:DEF.f, par:DEF.par, fp:DEF.fp, mid:DEF.mid});
+    draw();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODE: PREDICT  – Hypothese vor Beobachtung
+// ════════════════════════════════════════════════════════════════════════════
+const PREDICT_TASKS = [
+  // ── Teil 1: mit Einordnungshilfe (Fälle bewusst gemischt, kein Schema!) ──
+  {
+    g: 9, f: 3,
+    task: 'Stelle in Gedanken den Strahlengang vor: <b>g = 9 cm, f = 3 cm</b>. (Also g > 2f, denn 2f = 6 cm.) Was für ein Bild entsteht?',
+    hint: 'Erinnere dich: Bei g > 2f ist der Gegenstand „weit weg" von der Linse – wie bei einer Kamera.',
+  },
+  {
+    g: 2, f: 3,
+    task: 'Der Gegenstand rückt ganz nah heran: <b>g = 2 cm, f = 3 cm</b> – also g < f. Was sagst du voraus?',
+    hint: 'Anwendung: Lupe – du hältst sie nahe an einen Buchstaben.',
+  },
+  {
+    g: 4, f: 3,
+    task: 'Jetzt liegt der Gegenstand zwischen <b>F und 2F</b> (g = 4 cm, f = 3 cm). Was beobachtest du voraussichtlich?',
+    hint: 'Anwendung in der Praxis: Diaprojektor – das Dia ist nahe am Brennpunkt.',
+  },
+  {
+    g: 6, f: 3,
+    task: 'Spezialfall: <b>g = 2f</b> (g = 6 cm, f = 3 cm). Was geschieht bei dieser besonderen Konfiguration?',
+    hint: 'Symmetrie: Was passiert mit der Bildweite, wenn g = 2f gilt?',
+  },
+  {
+    g: 3, f: 3,
+    task: 'Sonderfall: <b>g = f</b> (Gegenstand genau im Brennpunkt, beide 3 cm). Was sagt dir deine Vermutung?',
+    hint: 'Was passiert mit Strahlen, die von einem Punkt im Brennpunkt ausgehen, nach der Linse?',
+  },
+  // ── Teil 2: ohne Einordnung – erst rechnen, dann tippen! ──
+  {
+    g: 4, f: 6,
+    task: 'Ab jetzt ohne Einordnung – du sortierst selbst: <b>g = 4 cm, f = 6 cm</b>. Deine Vorhersage?',
+    hint: 'Nicht schätzen! Vergleiche zuerst: Ist g größer oder kleiner als f?',
+  },
+  {
+    g: 8, f: 4,
+    task: '<b>g = 8 cm, f = 4 cm</b>. Sage das Bild vollständig voraus.',
+    hint: 'Rechne zuerst 2f aus. Wo liegt g im Vergleich dazu?',
+  },
+  {
+    g: 13, f: 6,
+    task: '<b>g = 13 cm, f = 6 cm</b>. Der Gegenstand ist weit weg – aber reicht dir das schon für ein Urteil?',
+    hint: 'Rechne 2f aus und vergleiche genau mit g – es wird knapp.',
+  },
+  {
+    g: 6, f: 4,
+    task: '<b>g = 6 cm, f = 4 cm</b>. Vorsicht, beliebte Falle!',
+    hint: '„g = 6, das ist doch weit weg …" – weit weg wovon? Entscheidend ist der Vergleich mit f und 2f.',
+  },
+  {
+    g: 4.4, f: 4.4,
+    task: 'Letzte Aufgabe, ganz ohne Hilfe: <b>g = 4,4 cm, f = 4,4 cm</b>.',
+    hint: 'Kein Tipp mehr – schau ganz genau auf die beiden Werte.',
+  },
+];
+let predictIdx = 0;
+let predictChoice = {type:null, orient:null, size:null};
+
+function loadPredictTask(i){
+  predictIdx = i;
+  const t = PREDICT_TASKS[i];
+  S.g = t.g; S.f = t.f;
+  // Force all three rays for clarity
+  S.par = true; S.fp = true; S.mid = true;
+  syncControls();
+  // Aufgabe legt g und f fest – Regler gesperrt, bis die Vorhersage geprüft ist
+  setSlidersLocked(true);
+  document.getElementById('pred-num').textContent = `${i+1}/${PREDICT_TASKS.length}`;
+  document.getElementById('pred-task').innerHTML = t.task;
+  document.getElementById('pred-hint').textContent = t.hint;
+  document.getElementById('pred-prev').disabled = (i===0);
+  document.getElementById('pred-next').disabled = (i===PREDICT_TASKS.length-1);
+  predictChoice = {type:null, orient:null, size:null};
+  document.querySelectorAll('#pred-type button, #pred-orient button, #pred-size button').forEach(b=>{
+    b.classList.remove('sel','correct','wrong');
+    b.disabled = false;
+  });
+  document.getElementById('pred-fb').innerHTML = '';
+  document.getElementById('pred-check').disabled = false;
+  document.getElementById('pred-check').textContent = 'Vorhersage prüfen';
+  SUPPRESS_IMAGE = true;
+  draw();
+}
+
+document.getElementById('pred-prev').addEventListener('click', ()=>loadPredictTask(Math.max(0, predictIdx-1)));
+document.getElementById('pred-next').addEventListener('click', ()=>loadPredictTask(Math.min(PREDICT_TASKS.length-1, predictIdx+1)));
+
+['type','orient','size'].forEach(cat=>{
+  document.querySelectorAll(`#pred-${cat} button`).forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(b.disabled) return;
+      document.querySelectorAll(`#pred-${cat} button`).forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');
+      predictChoice[cat] = b.dataset.v;
+    });
+  });
+});
+
+document.getElementById('pred-check').addEventListener('click', ()=>{
+  // If already revealed, "Nächste Aufgabe" advances
+  if(!SUPPRESS_IMAGE){
+    if(predictIdx < PREDICT_TASKS.length-1) loadPredictTask(predictIdx+1);
+    return;
+  }
+  // Validate: at least Bildart must be chosen; if not "kein", then orient & size too
+  if(!predictChoice.type){
+    const fb = document.getElementById('pred-fb');
+    fb.className = 'feedback fb-info';
+    fb.innerHTML = 'Wähle zuerst die Bildart (reell / virtuell / kein Bild).';
+    return;
+  }
+  if(predictChoice.type !== 'kein' && (!predictChoice.orient || !predictChoice.size)){
+    const fb = document.getElementById('pred-fb');
+    fb.className = 'feedback fb-info';
+    fb.innerHTML = 'Wähle auch noch Orientierung und Bildgröße aus.';
+    return;
+  }
+  // Validate
+  const res = classify(S.g, S.f);
+  // Determine correct answers
+  let correctType, correctOrient, correctSize;
+  if(res.b === null){
+    correctType='kein'; correctOrient=null; correctSize=null;
+  } else {
+    correctType = res.type;
+    correctOrient = res.orient;
+    correctSize = res.size;
+  }
+  // Special handling: for "kein Bild", orient and size are N/A
+  let hits = 0, total = 0, missing = [];
+  function check(cat, correct){
+    if(correct === null) return; // not applicable
+    total++;
+    const buttons = document.querySelectorAll(`#pred-${cat} button`);
+    buttons.forEach(b=>{
+      b.disabled = true;
+      if(b.dataset.v === correct) b.classList.add('correct');
+      else if(b.classList.contains('sel') && b.dataset.v !== correct) b.classList.add('wrong');
+    });
+    if(predictChoice[cat] === correct) hits++;
+    else if(!predictChoice[cat]) missing.push(cat);
+  }
+  check('type', correctType);
+  check('orient', correctOrient);
+  check('size', correctSize);
+
+  // Reveal image – jetzt darf auch wieder am Aufbau gespielt werden
+  SUPPRESS_IMAGE = false;
+  setSlidersLocked(false);
+  draw();
+
+  // Feedback
+  const fb = document.getElementById('pred-fb');
+  if(hits === total){
+    fb.className = 'feedback fb-ok';
+    fb.innerHTML = '✓ Volltreffer! Schaue dir nun den Strahlengang an und vergleiche mit deiner Begründung.';
+  } else if(hits > 0){
+    fb.className = 'feedback fb-info';
+    fb.innerHTML = `Teilweise richtig (${hits}/${total}). Vergleiche jetzt deine Vorhersage mit der angezeigten Konstruktion. Was war anders als erwartet?`;
+  } else {
+    fb.className = 'feedback fb-err';
+    fb.innerHTML = `Noch nicht passend. Achte besonders auf den Strahlenverlauf – wo schneiden sich die Strahlen?`;
+  }
+  document.getElementById('pred-check').textContent = (predictIdx < PREDICT_TASKS.length-1) ? 'Nächste Aufgabe ›' : 'Letzte Aufgabe – fertig!';
+  document.getElementById('pred-check').disabled = (predictIdx >= PREDICT_TASKS.length-1);
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODE: CONSTRUCT – Bildkonstruktion Schritt für Schritt
+// ════════════════════════════════════════════════════════════════════════════
+const CONSTRUCT_STEPS = [
+  {
+    rays: {par:false, fp:false, mid:false},
+    g: 8, f: 3,
+    task: '<b>Schritt 1: Ausgangslage</b><br>Der Gegenstand <b>G</b> (orange Pfeil) steht links der Linse. Wir wollen herausfinden, wo das Bild <b>B</b> entsteht.',
+    hint: 'Idee: Wir verfolgen drei besonders einfache Lichtstrahlen, die von der Spitze von G ausgehen. Wo sich diese nach der Linse schneiden, entsteht der Bildpunkt.',
+  },
+  {
+    rays: {par:true, fp:false, mid:false},
+    g: 8, f: 3,
+    task: '<b>Schritt 2: Parallelstrahl</b> <span style="color:#0072B2">━</span><br>Ein Strahl, der parallel zur optischen Achse verläuft, wird an der Linse so gebrochen, dass er durch den rechten Brennpunkt <b>F</b> auf der anderen Seite geht.',
+    hint: 'Warum? Die Linse ist gewölbt → an jeder Stelle anderer Brechungswinkel. Sammellinsen sind so geformt, dass alle achsenparallelen Strahlen genau im rechten Brennpunkt F gebündelt werden – das ist die <i>Definition</i> des Brennpunkts.',
+  },
+  {
+    rays: {par:true, fp:false, mid:true},
+    g: 8, f: 3,
+    task: '<b>Schritt 3: Mittelpunktstrahl</b> <span style="color:#009E73">┄</span><br>Ein Strahl durch die Linsenmitte verläuft <b>geradlinig</b> weiter (keine Richtungsänderung).',
+    hint: 'Warum? In der Mitte sind die beiden Linsenflächen praktisch parallel zueinander – wie bei einer dünnen Glasplatte. Der Strahl wird beim Eintritt und Austritt um denselben Winkel gebrochen, sodass die Richtung erhalten bleibt.',
+  },
+  {
+    rays: {par:true, fp:true, mid:true},
+    g: 8, f: 3,
+    task: '<b>Schritt 4: Brennpunktstrahl</b> <span style="color:#D55E00">╌</span><br>Ein Strahl, der vor der Linse durch den Brennpunkt <b>F</b> geht, verlässt sie achsenparallel.',
+    hint: 'Das ist der <b>umgekehrte Parallelstrahl</b>! Lichtwege sind umkehrbar: Ginge der Strahl andersherum (achsenparallel hinein), käme er durch F heraus. Beide Aussagen folgen aus demselben Brechungsgesetz.',
+  },
+  {
+    rays: {par:true, fp:true, mid:true},
+    g: 8, f: 3,
+    task: '<b>Schritt 5: Bildpunkt</b> <span style="color:#9c27b0">━</span><br>Alle drei Strahlen schneiden sich in einem Punkt (rechts unten) – dort ist der <b>Bildpunkt der Pfeilspitze</b>. Verbinde ihn mit der Achse → das vollständige Bild <b>B</b>.',
+    hint: 'Wichtig: Wir hätten auch nur <i>zwei</i> Strahlen gebraucht (zwei Geraden bestimmen den Schnittpunkt). Der dritte ist eine Kontrolle. Wenn alle drei sich treffen, hast du richtig konstruiert.',
+    extra: '<div class="feedback fb-info" style="margin-top:6px">Probiere jetzt selbst: Verändere oben g (Schieberegler) und beobachte, wie sich der Bildpunkt verschiebt!</div>',
+  },
+];
+let constructIdx = 0;
+
+function loadConstructTask(i){
+  constructIdx = i;
+  const s = CONSTRUCT_STEPS[i];
+  S.g = s.g; S.f = s.f;
+  document.getElementById('slg').value = s.g;
+  document.getElementById('slf').value = s.f;
+  FORCE_RAYS = s.rays;
+  document.getElementById('con-num').textContent = `${i+1}/${CONSTRUCT_STEPS.length}`;
+  document.getElementById('con-task').innerHTML = s.task;
+  document.getElementById('con-hint').innerHTML = s.hint;
+  document.getElementById('con-extra').innerHTML = s.extra || '';
+  document.getElementById('con-prev').disabled = (i===0);
+  document.getElementById('con-next').disabled = (i===CONSTRUCT_STEPS.length-1);
+  draw();
+}
+document.getElementById('con-prev').addEventListener('click', ()=>loadConstructTask(Math.max(0, constructIdx-1)));
+document.getElementById('con-next').addEventListener('click', ()=>loadConstructTask(Math.min(CONSTRUCT_STEPS.length-1, constructIdx+1)));
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODE: DIY „Jetzt du!" – Schüler konstruieren selbst
+// Phase 0: Parallelstrahl-Austritt ziehen · Phase 1: Mittelpunktstrahl ·
+// Phase 2: Bildpunkt setzen · Phase 3: gelöst (offizielle Konstruktion sichtbar)
+// ════════════════════════════════════════════════════════════════════════════
+const DIY_TASKS = [
+  // Aufgabe 1: Einstieg – die erste Strahlhälfte ist vorgegeben (Coach erklärt die Regeln)
+  { g:8, f:3, coach:true,
+    task:'Aufgabe 1 · <b>g = 8 cm, f = 3 cm</b>. Konstruiere das Bild der Pfeilspitze – Strahl für Strahl. Beim ersten Mal sage ich dir die Regeln.' },
+  // Ab hier: KOMPLETTE Strahlen von der Pfeilspitze an (full)
+  { g:4.5, f:3, coach:false, full:true,
+    task:'Aufgabe 2 · <b>g = 4,5 cm, f = 3 cm</b>. Jetzt komplett selbst: Konstruiere jeden Strahl von der Pfeilspitze aus – erst zur Linse, dann dahinter.' },
+  { g:10, f:4, coach:false, full:true,
+    task:'Aufgabe 3 · <b>g = 10 cm, f = 4 cm</b>. Andere Linse, gleiches Handwerk – wieder komplett von der Pfeilspitze aus.' },
+  { g:2, f:3, coach:false, full:true, virtual:true,
+    task:'Profi-Aufgabe · <b>g = 2 cm, f = 3 cm</b>. Der Gegenstand steht innerhalb der Brennweite! Konstruiere komplett: beide Strahlen von der Spitze aus, dann der Bildpunkt.' },
+  // Meisterprüfung: ALLES frei zeichnen, Bewertung erst auf Knopfdruck am Ende
+  { g:6, f:2, coach:false, freeform:true,
+    task:'Aufgabe 5 · <b>g = 6 cm, f = 2 cm</b>. Meisterprüfung, Teil 1: Zeichne die KOMPLETTE Konstruktion – beide Strahlen und den Bildpunkt – ohne Zwischencheck. Erst wenn du fertig bist: „Zeichnung prüfen".' },
+  { g:3, f:4, coach:false, freeform:true, virtual:true,
+    task:'Aufgabe 6 · <b>g = 3 cm, f = 4 cm</b>. Meisterprüfung, Teil 2: wieder alles in einem Zug – und diesmal steht der Gegenstand innerhalb der Brennweite …' },
+];
+let diyIdx = 0;
+let DIY = null;
+let diyDrag = null;
+const DIY_TOL_DEG = 3.5, DIY_TOL_IMG = 0.7;
+
+function loadDiyTask(i){
+  diyIdx = i;
+  const t = DIY_TASKS[i];
+  S.g = t.g; S.f = t.f;
+  FORCE_RAYS = {par:false, fp:false, mid:false};   // Standard-Strahlen aus – hier zeichnen die Schüler
+  HIDE_RESULT = true;
+  syncControls();
+  setSlidersLocked(true);
+  const ox = -t.g;
+  DIY = {
+    // freeform: ALLE Griffe gleichzeitig frei, Bewertung erst per „Zeichnung prüfen";
+    // full: jeder Strahl in zwei Teilen (Pfeilspitze→Linse, dann Linse→weiter);
+    // sonst (Aufgabe 1): erste Hälfte vorgegeben, nur der Austritt wird gezogen.
+    steps: t.freeform ? ['all']
+         : t.full     ? ['par-in','par-out','mid-in','mid-out','img']
+                      : ['par-out','mid-out','img'],
+    stepIdx:0, tries:0, dragged:false, solved:false,
+    h:{ parIn:{x:ox*0.4, y:3.2}, par:{x:5, y:2.8},   // Start bewusst FALSCH, aber neutral
+        midIn:{x:ox*0.4, y:2.6}, mid:{x:5, y:1.2} },
+    locked:{parIn:!t.full, par:false, midIn:!t.full, mid:false},
+    img:{x:4.5, y:-3},
+  };
+  document.getElementById('diy-check').classList.toggle('hidden', !t.freeform);
+  document.getElementById('diy-num').textContent = (i+1)+'/'+DIY_TASKS.length;
+  document.getElementById('diy-task').innerHTML = t.task;
+  document.getElementById('diy-prev').disabled = (i===0);
+  document.getElementById('diy-next').disabled = (i===DIY_TASKS.length-1);
+  setDiyFb('','');
+  setDiyHint();
+  draw();
+}
+
+function diyStep(){ return DIY.solved ? null : DIY.steps[DIY.stepIdx]; }
+function diyStepReached(key){ const i = DIY.steps.indexOf(key); return i>=0 && (DIY.solved || DIY.stepIdx>=i); }
+function diyAdvance(){ DIY.stepIdx++; DIY.tries = 0; setDiyHint(); }
+
+function setDiyHint(){
+  const t = DIY_TASKS[diyIdx];
+  const el = document.getElementById('diy-hint');
+  const PAR = '<span style="color:#0072B2;font-weight:700">━</span>';
+  const MID = '<span style="color:#009E73;font-weight:700">┄</span>';
+  const st = diyStep();
+  let h;
+  if(st==='all'){
+    h = t.virtual
+      ? 'Zeichne alles selbst: beide Strahlen – vor UND hinter der Linse – und zuletzt den Bildpunkt ⌖. Die gestrichelten Verlängerungen deiner Strahlen helfen dir. Am Ende: „Zeichnung prüfen"!'
+      : 'Zeichne alles selbst: beide Strahlen – vor UND hinter der Linse – und zuletzt den Bildpunkt ⌖. Kein Zwischencheck – erst am Ende „Zeichnung prüfen"!';
+  } else if(st==='par-in'){
+    h = '1. '+PAR+' Parallelstrahl · Teil 1: Ziehe den Griff so, dass der Strahl von der Pfeilspitze richtig zur Linse läuft. Sein Name verrät dir, wie!';
+  } else if(st==='par-out'){
+    h = t.coach
+      ? '1. '+PAR+' Parallelstrahl: Er kommt waagerecht an und wird an der Linse gebrochen – durch den rechten Brennpunkt F hinter der Linse. Ziehe den Griff passend!'
+      : (t.full
+        ? '1. '+PAR+' Parallelstrahl · Teil 2: Und wohin läuft er hinter der Linse weiter?'
+        : '1. '+PAR+' Parallelstrahl: Ziehe den Griff dorthin, wo der Strahl nach der Linse wirklich hinläuft.');
+  } else if(st==='mid-in'){
+    h = '2. '+MID+' Mittelpunktstrahl · Teil 1: Wohin muss er von der Pfeilspitze aus zielen? Ziehe den Griff!';
+  } else if(st==='mid-out'){
+    h = t.coach
+      ? '2. '+MID+' Mittelpunktstrahl: Er geht durch die Linsenmitte und behält seine Richtung bei. Ziehe den Griff passend!'
+      : (t.full
+        ? '2. '+MID+' Mittelpunktstrahl · Teil 2: Und hinter der Linsenmitte?'
+        : '2. '+MID+' Mittelpunktstrahl: Wohin läuft er hinter der Linsenmitte weiter?');
+  } else if(st==='img'){
+    h = t.virtual
+      ? '3. Deine Strahlen laufen auseinander! Verfolge die gestrichelten Verlängerungen: Von wo scheinen sie zu kommen? Setze den Bildpunkt ⌖ dorthin.'
+      : '3. Setze den Bildpunkt ⌖ genau dorthin, wo das Bild der Pfeilspitze entsteht.';
+  } else {
+    h = '✔ Aufgabe gelöst! Verschiebe zur Kontrolle die Regler – oder starte mit ↺ eine frische Runde.';
+  }
+  el.innerHTML = h;
+}
+
+function setDiyFb(cls, html){
+  const fb = document.getElementById('diy-fb');
+  fb.className = cls ? ('feedback '+cls) : '';
+  fb.innerHTML = html;
+}
+
+function angleDevDeg(o, p, q){ // Winkel zwischen den Richtungen o→p und o→q
+  const a1 = Math.atan2(p.y-o.y, p.x-o.x);
+  const a2 = Math.atan2(q.y-o.y, q.x-o.x);
+  let d = Math.abs(a1-a2)*180/Math.PI;
+  if(d>180) d = 360-d;
+  return d;
+}
+
+function diyExitOrigin(k){ return k==='par' ? {x:0, y:H} : {x:0, y:0}; }
+function diyIdealTarget(k){ return k==='par' ? {x:S.f, y:0} : {x:S.g, y:-H}; }
+
+function diySnap(k){ // nach Erfolg: Griff exakt auf die ideale Linie setzen
+  const o = diyExitOrigin(k), t = diyIdealTarget(k), h = DIY.h[k];
+  const dx = t.x-o.x, dy = t.y-o.y, L = Math.hypot(dx,dy);
+  const d = Math.max(Math.hypot(h.x-o.x, h.y-o.y), 3);
+  h.x = o.x + dx/L*d; h.y = o.y + dy/L*d;
+}
+
+// Erste Strahlhälfte (Pfeilspitze → Linse) bewerten – nur in full-Aufgaben
+function diyEvalIn(k){
+  const o = {x:-S.g, y:H};                 // Start ist IMMER die Pfeilspitze
+  const hk = k+'In', h = DIY.h[hk];
+  if(Math.hypot(h.x-o.x, h.y-o.y) < 1.2){
+    setDiyFb('fb-info','Ziehe den Griff weiter Richtung Linse, damit die Richtung eindeutig ist.');
+    return;
+  }
+  const tgt = k==='par' ? {x:0, y:H} : {x:0, y:0};
+  const dev = angleDevDeg(o, h, tgt);
+  if(dev <= DIY_TOL_DEG){
+    // Griff exakt auf die ideale Linie setzen
+    const dx=tgt.x-o.x, dy=tgt.y-o.y, L=Math.hypot(dx,dy);
+    const d = Math.max(Math.hypot(h.x-o.x, h.y-o.y), 2);
+    h.x = o.x + dx/L*d; h.y = o.y + dy/L*d;
+    DIY.locked[hk] = true;
+    setDiyFb('fb-ok', k==='par'
+      ? '✓ Parallel zur Achse – genau so kommt der Parallelstrahl an!'
+      : '✓ Mitten durch die Linsenmitte – das ist der Mittelpunktstrahl!');
+    diyAdvance();
+    return;
+  }
+  DIY.tries++;
+  let msg;
+  if(k==='par'){
+    if(angleDevDeg(o, h, {x:0, y:0}) <= DIY_TOL_DEG){
+      msg = 'Du zielst auf die Linsenmitte – das ist der <b>Mittelpunktstrahl</b>, der kommt gleich! Der Parallelstrahl läuft parallel zur optischen Achse.';
+    } else if(angleDevDeg(o, h, {x:-S.f, y:0}) <= DIY_TOL_DEG){
+      msg = 'Du zielst auf den Brennpunkt F – das wäre der <b>Brennpunktstrahl</b>. Gesucht ist der Parallelstrahl. Wozu verläuft der wohl parallel?';
+    } else if(DIY.tries>=3){
+      msg = 'Tipp: Der Parallelstrahl verläuft von der Pfeilspitze aus <b>waagerecht</b> – parallel zur optischen Achse – bis zur Linse.';
+    } else {
+      msg = 'Noch nicht. „Parallelstrahl" – wozu verläuft er parallel?';
+    }
+  } else {
+    if(angleDevDeg(o, h, {x:0, y:H}) <= DIY_TOL_DEG){
+      msg = 'Waagerecht – das wäre wieder der <b>Parallelstrahl</b>. Der Mittelpunktstrahl zielt auf einen anderen besonderen Punkt.';
+    } else if(angleDevDeg(o, h, {x:-S.f, y:0}) <= DIY_TOL_DEG){
+      msg = 'Du zielst auf den Brennpunkt F – das wäre der <b>Brennpunktstrahl</b>. Der Mittelpunktstrahl geht mitten durch die Linse.';
+    } else if(DIY.tries>=3){
+      msg = 'Tipp: Ziele von der Pfeilspitze genau auf die <b>Mitte der Linse</b> (Schnittpunkt von Linse und Achse).';
+    } else {
+      msg = 'Noch nicht. Durch welchen besonderen Punkt der Linse läuft der Mittelpunktstrahl?';
+    }
+  }
+  setDiyFb('fb-err', msg);
+}
+
+function diyEvalRay(k){
+  const o = diyExitOrigin(k), h = DIY.h[k];
+  if(Math.hypot(h.x-o.x, h.y-o.y) < 1.5){
+    setDiyFb('fb-info','Ziehe den Griff weiter von der Linse weg, damit die Richtung eindeutig ist.');
+    return;
+  }
+  const dev = angleDevDeg(o, h, diyIdealTarget(k));
+  if(dev <= DIY_TOL_DEG){
+    diySnap(k);
+    DIY.locked[k] = true;
+    setDiyFb('fb-ok', k==='par'
+      ? '✓ Der Parallelstrahl läuft durch den rechten Brennpunkt F – sitzt!'
+      : '✓ Der Mittelpunktstrahl geht ungebrochen weiter – stark!');
+    diyAdvance();
+    return;
+  }
+  DIY.tries++;
+  let msg;
+  if(k==='par'){
+    if(angleDevDeg(o, h, {x:o.x+5, y:o.y}) <= DIY_TOL_DEG){
+      msg = 'Bei dir läuft der Strahl einfach geradeaus weiter – aber die Linse bricht ihn! Wohin bündelt eine Sammellinse achsenparallele Strahlen?';
+    } else if(angleDevDeg(o, h, {x:2*S.f, y:0}) <= DIY_TOL_DEG){
+      msg = 'Knapp vorbei: Du zielst auf 2F. Achsenparallele Strahlen treffen sich aber im Brennpunkt F.';
+    } else if(DIY.tries>=3){
+      msg = 'Tipp: Ziele mit dem Strahl genau auf das Kreuz F (bei x = '+S.f.toFixed(1).replace('.',',')+' rechts der Linse).';
+    } else {
+      msg = 'Noch nicht. Der Strahl kommt parallel zur Achse an – wohin MUSS er hinter der Linse laufen?';
+    }
+  } else {
+    if(angleDevDeg(o, h, {x:5, y:0}) <= DIY_TOL_DEG){
+      msg = 'Durch den Brennpunkt? Das gilt für den Parallelstrahl! Was macht ein Strahl, der genau durch die Linsen<b>mitte</b> geht?';
+    } else if(DIY.tries>=3){
+      msg = 'Tipp: Verlängere die Linie „Pfeilspitze → Linsenmitte" einfach geradlinig nach rechts unten.';
+    } else {
+      msg = 'Noch nicht. Der Strahl trifft genau die Linsenmitte – ändert die Linse dort seine Richtung?';
+    }
+  }
+  setDiyFb('fb-err', msg);
+}
+
+function diyEvalImg(){
+  const res = classify(S.g, S.f);
+  const t = DIY_TASKS[diyIdx];
+  const d = Math.hypot(DIY.img.x-res.imgX, DIY.img.y-res.imgH);
+  if(d <= DIY_TOL_IMG){
+    DIY.img.x = res.imgX; DIY.img.y = res.imgH;
+    DIY.solved = true;
+    HIDE_RESULT = false;
+    FORCE_RAYS = {par:true, fp:true, mid:true};   // offizielle Konstruktion als Bestätigung
+    setSlidersLocked(false);
+    setDiyFb('fb-ok', t.virtual
+      ? '✓ Perfekt! Die Strahlen scheinen aus einem Punkt LINKS der Linse zu kommen: ein virtuelles, aufrechtes, vergrößertes Bild – die Lupe! Der Brennpunktstrahl (orange) bestätigt deine Konstruktion.'
+      : '✓ Konstruktion vollständig! Zur Kontrolle ist jetzt der Brennpunktstrahl (orange) eingeblendet – auch er läuft durch deinen Bildpunkt.');
+    setDiyHint();
+    return;
+  }
+  DIY.tries++;
+  let msg;
+  if(t.virtual){
+    msg = DIY.tries>=3
+      ? 'Tipp: Lege ⌖ genau auf den Schnittpunkt der beiden gestrichelten Verlängerungen – links der Linse, oberhalb der Achse.'
+      : 'Rechts der Linse schneiden sich deine Strahlen nie. Verfolge die gestrichelten Verlängerungen nach links!';
+  } else {
+    msg = DIY.tries>=3
+      ? 'Tipp: Lege ⌖ genau auf den Punkt, in dem sich deine beiden Strahlen kreuzen.'
+      : 'Der Bildpunkt liegt dort, wo sich deine beiden Strahlen schneiden. Schau genau hin!';
+  }
+  setDiyFb('fb-err', msg);
+}
+
+function diyEvaluate(){
+  if(!DIY || DIY.solved) return;
+  const st = diyStep();
+  if(st==='par-in') diyEvalIn('par');
+  else if(st==='par-out') diyEvalRay('par');
+  else if(st==='mid-in') diyEvalIn('mid');
+  else if(st==='mid-out') diyEvalRay('mid');
+  else if(st==='img') diyEvalImg();
+  // st==='all' (Meisterprüfung): KEINE Zwischenbewertung – nur der Prüf-Knopf
+}
+
+// ── Meisterprüfung: alles auf einmal bewerten ────────────────────────────────
+function diyCheckAll(){
+  const tip = {x:-S.g, y:H};
+  const res = classify(S.g, S.f);
+  const oP = {x:0, y:diyYlAt('parIn')}, oM = {x:0, y:diyYlAt('midIn')};
+  const c = {};
+  // erste Hälften: Richtung ab Pfeilspitze
+  c.parIn = Math.hypot(DIY.h.parIn.x-tip.x, DIY.h.parIn.y-tip.y) >= 1.2
+         && angleDevDeg(tip, DIY.h.parIn, {x:0, y:H}) <= DIY_TOL_DEG;
+  c.midIn = Math.hypot(DIY.h.midIn.x-tip.x, DIY.h.midIn.y-tip.y) >= 1.2
+         && angleDevDeg(tip, DIY.h.midIn, {x:0, y:0}) <= DIY_TOL_DEG;
+  // zweite Hälften: par durch F; mid ungebrochen (Austrittsrichtung = Einfallsrichtung)
+  c.parOut = Math.hypot(DIY.h.par.x-oP.x, DIY.h.par.y-oP.y) >= 1.2
+          && angleDevDeg(oP, DIY.h.par, {x:S.f, y:0}) <= DIY_TOL_DEG;
+  const midCont = {x:oM.x+(oM.x-tip.x), y:oM.y+(oM.y-tip.y)};   // geradlinige Fortsetzung
+  c.midOut = Math.hypot(DIY.h.mid.x-oM.x, DIY.h.mid.y-oM.y) >= 1.2
+          && angleDevDeg(oM, DIY.h.mid, midCont) <= DIY_TOL_DEG;
+  c.img = Math.hypot(DIY.img.x-res.imgX, DIY.img.y-res.imgH) <= DIY_TOL_IMG;
+  return c;
+}
+
+function diyCheckDrawing(){
+  const t = DIY_TASKS[diyIdx];
+  const c = diyCheckAll();
+  if(c.parIn && c.parOut && c.midIn && c.midOut && c.img){
+    const res = classify(S.g, S.f);
+    DIY.img.x = res.imgX; DIY.img.y = res.imgH;
+    DIY.solved = true;
+    HIDE_RESULT = false;
+    FORCE_RAYS = {par:true, fp:true, mid:true};
+    setSlidersLocked(false);
+    setDiyFb('fb-ok', t.virtual
+      ? '✓ Meisterhaft! Die komplette Konstruktion mit virtuellem Bild – ohne einen einzigen Zwischencheck. Der Brennpunktstrahl (orange) bestätigt dich.'
+      : '✓ Meisterhaft! Die komplette Konstruktion in einem Zug – der Brennpunktstrahl (orange) bestätigt dich.');
+    setDiyHint();
+    draw();
+    return;
+  }
+  DIY.tries++;
+  function row(ok, label){
+    return ok ? '<span style="color:#80ffb0">✓</span> '+label
+              : '<span style="color:#ff8a80;font-weight:800">✗</span> '+label;
+  }
+  let msg = 'Noch nicht alles richtig – korrigiere die ✗-Zeilen und prüfe erneut:<br>'
+    + row(c.parIn, 'Parallelstrahl bis zur Linse') + '<br>'
+    + row(c.parOut, 'Parallelstrahl hinter der Linse') + '<br>'
+    + row(c.midIn, 'Mittelpunktstrahl bis zur Linse') + '<br>'
+    + row(c.midOut, 'Mittelpunktstrahl hinter der Linse') + '<br>'
+    + row(c.img, 'Bildpunkt ⌖');
+  if(DIY.tries>=3){
+    const tips = [];
+    if(!c.parIn)  tips.push('Der Parallelstrahl läuft von der Spitze aus waagerecht zur Linse.');
+    if(!c.parOut) tips.push('Hinter der Linse geht der Parallelstrahl durch den rechten Brennpunkt F.');
+    if(!c.midIn)  tips.push('Der Mittelpunktstrahl zielt von der Spitze auf die Linsenmitte.');
+    if(!c.midOut) tips.push('Der Mittelpunktstrahl geht ungebrochen geradeaus weiter.');
+    if(!c.img)    tips.push(t.virtual
+      ? 'Der Bildpunkt liegt am Schnittpunkt der gestrichelten Verlängerungen – links der Linse!'
+      : 'Der Bildpunkt liegt am Schnittpunkt deiner beiden Strahlen.');
+    msg += '<br><br>Tipp: ' + tips.join(' ');
+  }
+  setDiyFb('fb-err', msg);
+}
+
+document.getElementById('diy-check').addEventListener('click', function(){
+  if(DIY && !DIY.solved && DIY_TASKS[diyIdx].freeform) diyCheckDrawing();
+});
+
+// ── Zeichnen der Schüler-Ebene ──────────────────────────────────────────────
+function drawDiy(){
+  const th = THEMES[S.cm] || THEMES.cbf;
+  const t = DIY_TASKS[diyIdx];
+  const ox = -S.g;
+  // Meisterprüfung: alle fünf Elemente gleichzeitig frei, nichts rastet ein
+  if(t.freeform){
+    diyDrawIncident('parIn', th.par, []);
+    diyDrawExitFree('par', 'parIn', th.par, []);
+    diyDrawIncident('midIn', th.mid, [5,4]);
+    diyDrawExitFree('mid', 'midIn', th.mid, [5,4]);
+    if(t.virtual){
+      diyDrawBackFree('par', 'parIn', th.par);
+      diyDrawBackFree('mid', 'midIn', th.mid);
+    }
+    diyDrawImgMarker();
+    return;
+  }
+  // Parallelstrahl: erste Hälfte (vorgegeben, gebaut oder gerade im Bau)
+  if(t.full && !DIY.locked.parIn){
+    diyDrawIncident('parIn', th.par, []);
+  } else {
+    seg(ox, H, 0, H, th.par, 2.2);
+  }
+  if(diyStepReached('par-out')) diyDrawExit('par', th.par, []);
+  // Mittelpunktstrahl: erscheint erst, wenn er „dran" ist
+  if(diyStepReached(t.full ? 'mid-in' : 'mid-out')){
+    if(t.full && !DIY.locked.midIn){
+      diyDrawIncident('midIn', th.mid, [5,4]);
+    } else {
+      seg(ox, H, 0, 0, th.mid, 2.2, [5,4]);
+    }
+    if(diyStepReached('mid-out')) diyDrawExit('mid', th.mid, [5,4]);
+  }
+  // Rückverlängerungen im virtuellen Fall (bei der Bildpunkt-Suche)
+  if(t.virtual && diyStep()==='img'){
+    diyDrawBack('par', th.par);
+    diyDrawBack('mid', th.mid);
+  }
+  // Bildpunkt-Marker ⌖
+  if(diyStep()==='img') diyDrawImgMarker();
+}
+
+function diyDrawImgMarker(){
+  const m = DIY.img, px = wx(m.x), py = wy(m.y);
+  ctx.save();
+  ctx.strokeStyle='#9c27b0'; ctx.lineWidth=2.5; ctx.fillStyle='rgba(156,39,176,0.15)';
+  ctx.beginPath(); ctx.arc(px,py,12,0,2*Math.PI); ctx.fill(); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(px-16,py); ctx.lineTo(px-6,py); ctx.moveTo(px+6,py); ctx.lineTo(px+16,py);
+  ctx.moveTo(px,py-16); ctx.lineTo(px,py-6); ctx.moveTo(px,py+6); ctx.lineTo(px,py+16);
+  ctx.stroke();
+  ctx.restore();
+  txt('B?', m.x+0.75, m.y+0.55, {size:13, col:'#9c27b0', bg:'rgba(255,255,255,0.85)'});
+}
+
+// y-Wert, an dem die erste Strahlhälfte die Linsenebene (x=0) trifft
+function diyYlAt(inKey){
+  const o = {x:-S.g, y:H}, h = DIY.h[inKey];
+  return o.y + (h.y-o.y)*(0-o.x)/((h.x-o.x) || 1e-6);
+}
+
+function diyDrawHandle(h, col){
+  const px = wx(h.x), py = wy(h.y);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(px,py,11,0,2*Math.PI);
+  ctx.fillStyle='#fff'; ctx.fill();
+  ctx.lineWidth=3; ctx.strokeStyle=col; ctx.stroke();
+  ctx.beginPath(); ctx.arc(px,py,3.5,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+  ctx.restore();
+}
+
+// Austrittsstrahl im Freiform-Modus: startet dort, wo die EIGENE erste Hälfte
+// die Linse trifft (Zeichnung bleibt zusammenhängend), Griff immer sichtbar
+function diyDrawExitFree(k, inKey, col, dash){
+  const o = {x:0, y:diyYlAt(inKey)}, h = DIY.h[k];
+  const dx = h.x-o.x, dy = h.y-o.y, L = Math.hypot(dx,dy) || 1;
+  seg(o.x, o.y, o.x+dx/L*40, o.y+dy/L*40, col, 2.2, dash);
+  diyDrawHandle(h, col);
+}
+
+function diyDrawBackFree(k, inKey, col){
+  const o = {x:0, y:diyYlAt(inKey)}, h = DIY.h[k];
+  const dx = h.x-o.x, dy = h.y-o.y, L = Math.hypot(dx,dy) || 1;
+  seg(o.x, o.y, o.x-dx/L*40, o.y-dy/L*40, col, 1.5, [6,4]);
+}
+
+// Erste Strahlhälfte im Bau: Linie Pfeilspitze → Griff, bis zur Linsenebene verlängert
+function diyDrawIncident(hk, col, dash){
+  const o = {x:-S.g, y:H}, h = DIY.h[hk];
+  const dx = h.x-o.x, dy = h.y-o.y;
+  const yl = o.y + dy*(0-o.x)/(dx || 1e-6);   // y-Wert an der Linsenebene x=0
+  seg(o.x, o.y, 0, yl, col, 2.2, dash);
+  const px = wx(h.x), py = wy(h.y);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(px,py,11,0,2*Math.PI);
+  ctx.fillStyle='#fff'; ctx.fill();
+  ctx.lineWidth=3; ctx.strokeStyle=col; ctx.stroke();
+  ctx.beginPath(); ctx.arc(px,py,3.5,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+  ctx.restore();
+  if(!DIY.dragged) txt('ziehen!', h.x, h.y+0.9, {size:12, col:'#555', align:'center', bg:'rgba(255,255,255,0.85)'});
+}
+
+function diyDrawExit(k, col, dash){
+  const o = diyExitOrigin(k), h = DIY.h[k];
+  const dx = h.x-o.x, dy = h.y-o.y, L = Math.hypot(dx,dy) || 1;
+  seg(o.x, o.y, o.x+dx/L*40, o.y+dy/L*40, col, 2.2, dash);
+  if(!DIY.locked[k]){
+    const px = wx(h.x), py = wy(h.y);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(px,py,11,0,2*Math.PI);
+    ctx.fillStyle='#fff'; ctx.fill();
+    ctx.lineWidth=3; ctx.strokeStyle=col; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px,py,3.5,0,2*Math.PI); ctx.fillStyle=col; ctx.fill();
+    ctx.restore();
+    if(!DIY.dragged) txt('ziehen!', h.x, h.y+0.9, {size:12, col:'#555', align:'center', bg:'rgba(255,255,255,0.85)'});
+  }
+}
+
+function diyDrawBack(k, col){
+  const o = diyExitOrigin(k), h = DIY.h[k];
+  const dx = h.x-o.x, dy = h.y-o.y, L = Math.hypot(dx,dy) || 1;
+  seg(o.x, o.y, o.x-dx/L*40, o.y-dy/L*40, col, 1.5, [6,4]);
+}
+
+// ── Pointer-Interaktion (Maus + Touch) ──────────────────────────────────────
+function diyPointerWorld(e){
+  const r = canvas.getBoundingClientRect();
+  return { x: WX0 + (e.clientX-r.left)/(r.width||1)*(WX1-WX0),
+           y: WY0 + (1-(e.clientY-r.top)/(r.height||1))*(WY1-WY0) };
+}
+
+const DIY_STEP_HANDLE = {'par-in':'parIn', 'par-out':'par', 'mid-in':'midIn', 'mid-out':'mid', 'img':'img'};
+
+canvas.addEventListener('pointerdown', function(e){
+  if(MODE==='bank'){ bankPointerDown(e); return; }
+  if(MODE!=='diy' || !DIY || DIY.solved) return;
+  const p = diyPointerWorld(e);
+  let key = null;
+  if(DIY_TASKS[diyIdx].freeform){
+    // Meisterprüfung: alle fünf Griffe gleichzeitig aktiv – den nächsten nehmen
+    let best = 1e9;
+    [['parIn',DIY.h.parIn],['par',DIY.h.par],['midIn',DIY.h.midIn],['mid',DIY.h.mid],['img',DIY.img]]
+      .forEach(function(ent){
+        const d = Math.hypot(wx(p.x)-wx(ent[1].x), wy(p.y)-wy(ent[1].y));
+        if(d < best){ best = d; key = ent[0]; }
+      });
+    if(best > 36) return;
+  } else {
+    key = DIY_STEP_HANDLE[diyStep()];
+    if(!key) return;
+    const tgt = key==='img' ? DIY.img : DIY.h[key];
+    const distPx = Math.hypot(wx(p.x)-wx(tgt.x), wy(p.y)-wy(tgt.y));
+    if(distPx > 36) return;                      // großzügige Touch-Zone
+  }
+  diyDrag = key;
+  DIY.dragged = true;
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+  e.preventDefault();
+});
+
+canvas.addEventListener('pointermove', function(e){
+  if(MODE==='bank'){ bankPointerMove(e); return; }
+  if(!diyDrag) return;
+  const p = diyPointerWorld(e);
+  const tgt = diyDrag==='img' ? DIY.img : DIY.h[diyDrag];
+  if(diyDrag==='img'){
+    tgt.x = Math.max(WX0+0.3, Math.min(WX1-0.3, p.x));      // Bildpunkt darf überallhin (auch links!)
+  } else if(diyDrag==='parIn' || diyDrag==='midIn'){
+    tgt.x = Math.max(-S.g+0.5, Math.min(-0.2, p.x));        // erste Hälfte: zwischen Pfeil und Linse
+  } else {
+    tgt.x = Math.max(0.4, Math.min(WX1-0.3, p.x));          // Austritt: rechts der Linse
+  }
+  tgt.y = Math.max(WY0+0.3, Math.min(WY1-0.3, p.y));
+  draw();
+});
+
+function diyPointerUp(e){
+  if(!diyDrag) return;
+  diyDrag = null;
+  // Meisterprüfung: KEINE Bewertung beim Loslassen – erst „Zeichnung prüfen"
+  if(!DIY_TASKS[diyIdx].freeform) diyEvaluate();
+  draw();
+}
+function canvasPointerUp(e){
+  if(MODE==='bank'){ bankPointerUp(e); return; }
+  diyPointerUp(e);
+}
+canvas.addEventListener('pointerup', canvasPointerUp);
+canvas.addEventListener('pointercancel', canvasPointerUp);
+
+document.getElementById('diy-prev').addEventListener('click', ()=>loadDiyTask(Math.max(0, diyIdx-1)));
+document.getElementById('diy-next').addEventListener('click', ()=>loadDiyTask(Math.min(DIY_TASKS.length-1, diyIdx+1)));
+document.getElementById('diy-reset').addEventListener('click', ()=>loadDiyTask(diyIdx));
+
+// Debug-Hook fürs Testen (Muster wie __linsenbau in der 3D-Werkstatt)
+window.__sl = {
+  mode: function(){ return MODE; },
+  diy: function(){ return DIY; },
+  drop: function(k, x, y){
+    if(k==='img'){ DIY.img.x=x; DIY.img.y=y; } else { DIY.h[k].x=x; DIY.h[k].y=y; }
+    DIY.dragged = true;
+    diyEvaluate(); draw();   // im Freiform-Modus ist diyEvaluate ein No-Op
+  },
+  check: function(){ diyCheckDrawing(); }
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODE: BANK „Experiment" – virtuelle optische Bank (Kerze + Schirm + Messtabelle)
+// Eigener Voll-Renderer (drawBank), damit das Scharfstellen wirklich selbst
+// gefunden wird: keine F/2F-Marker, kein Bildpfeil, kein Linsenlabel „leaken".
+// ════════════════════════════════════════════════════════════════════════════
+const BANK_SNAP = 0.4;                 // cm – Schärfe-Toleranz (0,15 wäre auf iPad zu fein)
+const BANK_SCREEN_MIN = 1, BANK_SCREEN_MAX = 13.7;   // Schirm-Bereich (WX1 − 0.3)
+const BANK_BAR = 6.5;                  // halbe Höhe der Schirm-Leiste (Welt-cm)
+
+// Kann dieser Browser Canvas-Blur? (iPad-Safari ab 16 ja; sonst Fallback-Schmier)
+let BANK_BLUR_OK = false;
+try { ctx.filter = 'blur(2px)'; BANK_BLUR_OK = (ctx.filter === 'blur(2px)'); ctx.filter = 'none'; } catch(_) { BANK_BLUR_OK = false; }
+
+const BANK_TASKS = [
+  { parallel:true, hideF:true, lockG:true, g:12, f:3,
+    title:'Brennweite bestimmen',
+    task:'Die Lichtquelle steht <b>ganz weit weg</b> – das Licht fällt <b>parallel</b> ein. Schiebe den Schirm, bis der Lichtfleck am <b>kleinsten</b> ist. Dort bündelt die Linse das Licht: im Brennpunkt.',
+    hint:'Lies die Brennweite f an der Skala der Achse ab, sobald der Fleck ein Punkt ist.' },
+  { lockG:true, g:7, f:3, obs:true,
+    title:'Scharfes Bild finden',
+    task:'Die Kerze steht bei <b>g = 7 cm</b> (f = 3 cm). Schiebe den Schirm, bis das Bild <b>scharf</b> ist. Lies b an der Achse ab und übernimm den Messwert. Kreuze an, was du beobachtest.',
+    hint:'Es gibt genau eine scharfe Stelle. Vergleiche das Bild mit der Kerze: größer oder kleiner, herum oder aufrecht?' },
+  { lockG:false, g:6, f:3,
+    title:'Messreihe',
+    task:'Stelle nacheinander <b>g = 6 cm</b> und <b>g = 4 cm</b> ein (Kerze ziehen), stelle jedes Mal scharf und übernimm den Messwert. Was fällt dir auf?',
+    hint:'Ziehe die Kerze näher an die Linse und beobachte Bildweite b und Bildgröße. Achtung: g muss größer als f bleiben.' },
+  { lockG:true, g:2, f:3,
+    title:'Sonderfall Lupe',
+    task:'Jetzt steht die Kerze <b>innerhalb</b> der Brennweite: <b>g = 2 cm</b> (g &lt; f). Versuche, das Bild auf dem Schirm scharf zu stellen. Gelingt es?',
+    hint:'Der Schirm bleibt leer. Schau stattdessen durch die Linse: aufrecht und vergrößert. Das ist die Lupe.' },
+];
+
+let bankIdx = 0;
+let BANK = null;
+let bankDrag = null;
+
+function fmt(x){ return (Math.round(x*10)/10).toFixed(1).replace('.', ','); }
+function bankBildText(res){ return res.type + ', ' + res.orient + ', ' + res.size; }
+function bankObsComplete(){ return BANK.obs.size && BANK.obs.orient && BANK.obs.type; }
+function bankClearTimer(){ if(BANK && BANK.lupeTimer){ clearTimeout(BANK.lupeTimer); BANK.lupeTimer = null; } }
+function bankIsSharp(res, t){
+  if(t.parallel) return Math.abs(BANK.screenX - S.f) <= BANK_SNAP;
+  return res.b !== null && res.b > 0 && res.b <= BANK_SCREEN_MAX && Math.abs(BANK.screenX - res.b) <= BANK_SNAP;
+}
+function bankRoundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function setBankFb(cls, html){
+  const fb = document.getElementById('bank-fb');
+  fb.className = cls ? ('feedback ' + cls) : '';
+  fb.innerHTML = html;
+}
+
+function loadBankTask(i){
+  bankIdx = i;
+  const t = BANK_TASKS[i];
+  bankClearTimer();
+  bankDrag = null;
+  if(!BANK) BANK = { rows: [] };
+  BANK.screenX  = t.parallel ? 9 : 8;
+  BANK.showCone = false;
+  BANK.obs      = { size:null, orient:null, type:null };
+  BANK.je       = { b:null, s:null };
+  BANK.lupeShown = false; BANK.lupeTimer = null; BANK.foundF = false; BANK.fbHold = false;
+  S.f = t.f; S.g = t.g; syncControls();
+  document.getElementById('slg').disabled = !!t.lockG;
+  document.getElementById('slf').disabled = true;                 // f ist die feste Apparatur
+  // Bank nutzt eigene kompakte Kacheln statt der großen Regler (spart Platz auf iPad-Portrait)
+  document.getElementById('cgG').classList.add('hidden');
+  document.getElementById('cgF').classList.add('hidden');
+  document.getElementById('bank-g-tile').classList.toggle('hidden', !!t.parallel);   // Auftrag 1: kein g
+  document.getElementById('bank-f-tile').classList.toggle('hidden', !!t.hideF);      // Auftrag 1: f verdeckt
+  document.getElementById('bank-num').textContent = (i+1) + '/' + BANK_TASKS.length;
+  document.getElementById('bank-title').textContent = t.title;
+  document.getElementById('bank-task').innerHTML = t.task;
+  document.getElementById('bank-hint').innerHTML = t.hint;
+  document.getElementById('bank-prev').disabled = (i === 0);
+  document.getElementById('bank-next').disabled = (i === BANK_TASKS.length-1);
+  document.getElementById('bank-obs').classList.toggle('hidden', !t.obs);
+  document.querySelectorAll('#bank-obs .pred-row button').forEach(b => b.classList.remove('sel'));
+  const take = document.getElementById('bank-take');
+  take.classList.toggle('hidden', !!t.parallel);
+  take.disabled = true;
+  document.getElementById('bank-cone').checked = false;
+  document.getElementById('bank-jedesto').classList.toggle('hidden', !(i === 2 && BANK.rows.length >= 3));
+  document.getElementById('je-fb').innerHTML = '';
+  document.querySelectorAll('#je-b button, #je-s button').forEach(b => b.classList.remove('sel'));
+  document.getElementById('je-b-slot').textContent = '___';
+  document.getElementById('je-s-slot').textContent = '___';
+  setBankFb('', '');
+  bankRenderTable();
+  draw();
+}
+
+// ── Voll-Renderer ────────────────────────────────────────────────────────────
+function drawBank(){
+  const t = BANK_TASKS[bankIdx];
+  ctx.clearRect(0,0,cW,cH);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cW,cH);
+  bankDrawGrid();
+  drawLens(S.f, S.ls, false);            // ohne R/d/n-Label
+  if(!t.hideF) bankDrawFoci();           // F/2F beidseitig – außer in Auftrag 1
+  const res = classify(S.g, S.f);
+  if(t.parallel){
+    bankDrawParallel();
+  } else {
+    bankDrawCandle();
+    if(BANK.showCone) bankDrawCone(res);
+  }
+  bankDrawScreen(res, t);
+  bankDrawStatus(res, t);
+  bankUpdateSidebar(res, t);
+}
+
+function bankDrawGrid(){
+  ctx.save(); ctx.strokeStyle='#e8edf2'; ctx.lineWidth=1;
+  for(let x=Math.ceil(WX0);x<=WX1;x++){ctx.beginPath();ctx.moveTo(wx(x),0);ctx.lineTo(wx(x),cH);ctx.stroke();}
+  for(let y=Math.ceil(WY0);y<=WY1;y++){ctx.beginPath();ctx.moveTo(0,wy(y));ctx.lineTo(cW,wy(y));ctx.stroke();}
+  ctx.restore();
+  seg(WX0,0,WX1,0,'#aaa',1.5);
+  ctx.save();
+  ctx.fillStyle='#888'; ctx.font=`${Math.max(10,ws(0.7))}px Arial`;
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let x=-12;x<=12;x+=2){
+    const px=wx(x), py=wy(0);
+    ctx.beginPath(); ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
+    ctx.moveTo(px,py-4); ctx.lineTo(px,py+4); ctx.stroke();
+    if(x!==0) ctx.fillText(x, px, py+6);
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.font=`bold ${Math.max(13,ws(1))}px -apple-system,Arial`;
+  ctx.fillStyle='#222'; ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('Optische Bank', cW/2, 6);
+  ctx.restore();
+}
+
+function bankDrawFoci(){
+  for(const [fx,lbl] of [[-S.f,'F'],[S.f,'F'],[-2*S.f,'2F'],[2*S.f,'2F']]){
+    const col = Math.abs(fx) <= S.f+0.01 ? '#4dd0e1' : '#6688aa';
+    const px=wx(fx), py=wy(0), s=ws(0.33);
+    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px-s,py-s); ctx.lineTo(px+s,py+s);
+    ctx.moveTo(px+s,py-s); ctx.lineTo(px-s,py+s); ctx.stroke(); ctx.restore();
+    txt(lbl, fx, -0.65, {size:13, col:'#333', align:'center', bg:'rgba(255,255,255,0.85)'});
+  }
+}
+
+function bankDrawCandle(){
+  const t = BANK_TASKS[bankIdx];
+  const ox = -S.g;
+  const cx = wx(ox);
+  // Fußteller
+  ctx.save();
+  ctx.fillStyle='#8a97a3';
+  ctx.beginPath(); ctx.ellipse(cx, wy(0), ws(0.42), ws(0.12), 0, 0, 2*Math.PI); ctx.fill();
+  // Wachskörper
+  const wpx = ws(0.5);
+  ctx.fillStyle='#f0e2c0'; ctx.strokeStyle='#c9b896'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.rect(cx-wpx/2, wy(1.5), wpx, wy(0)-wy(1.5)); ctx.fill(); ctx.stroke();
+  // Docht
+  ctx.strokeStyle='#3a2a1a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cx, wy(1.5)); ctx.lineTo(cx, wy(1.62)); ctx.stroke();
+  // Flamme (Spitze bei y = H = 2.0)
+  const fcy = wy(1.82);
+  ctx.fillStyle='#f6a01e';
+  ctx.beginPath(); ctx.ellipse(cx, fcy, ws(0.2), ws(0.42), 0, 0, 2*Math.PI); ctx.fill();
+  ctx.fillStyle='#ffe37a';
+  ctx.beginPath(); ctx.ellipse(cx, wy(1.86), ws(0.1), ws(0.26), 0, 0, 2*Math.PI); ctx.fill();
+  ctx.restore();
+  txt('G', ox-0.55, 1.0, {size:16, col:'#222', align:'center', bg:'rgba(255,255,255,0.85)'});
+  // Zieh-Griff, wenn beweglich
+  if(!t.parallel && !t.lockG){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, wy(2.0), 11, 0, 2*Math.PI);
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
+    ctx.lineWidth=2.5; ctx.strokeStyle='#e07b1a'; ctx.stroke(); ctx.restore();
+    txt('ziehen', ox, 2.55, {size:11, col:'#a05a12', align:'center', bg:'rgba(255,255,255,0.8)'});
+  }
+}
+
+function bankDrawParallel(){
+  const ys = [-2.4,-1.6,-0.8,0.8,1.6,2.4];
+  const col = '#f6b73c';
+  for(const y of ys){
+    seg(WX0+0.2, y, 0, y, col, 2);           // einfallend, parallel
+    seg(0, y, S.f, 0, col, 2);               // gebrochen: durch Brennpunkt
+    const dx = S.f, dy = -y, L = Math.hypot(dx,dy);
+    seg(S.f, 0, S.f + dx/L*6, dy/L*6, col, 1.4);   // danach divergierend
+  }
+  txt('paralleles Licht (Quelle weit weg)', WX0+3.3, 3.4, {size:12, col:'#a86a12', align:'center', bg:'rgba(255,255,255,0.8)'});
+}
+
+function bankDrawCone(res){
+  if(res.b === null) return;
+  const tip = {x:-S.g, y:H}, ap = 2.4, col = '#f6b73c';
+  if(res.b > 0){
+    ctx.save(); ctx.fillStyle='rgba(246,183,60,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(wx(tip.x),wy(tip.y));
+    ctx.lineTo(wx(0),wy(ap)); ctx.lineTo(wx(res.imgX),wy(res.imgH)); ctx.lineTo(wx(0),wy(-ap));
+    ctx.closePath(); ctx.fill(); ctx.restore();
+    seg(tip.x,tip.y,0,ap,col,1.6);  seg(0,ap,res.imgX,res.imgH,col,1.6);
+    seg(tip.x,tip.y,0,-ap,col,1.6); seg(0,-ap,res.imgX,res.imgH,col,1.6);
+  } else {
+    for(const e of [ap,-ap]){
+      seg(tip.x,tip.y,0,e,col,1.6);
+      const dx=0-res.imgX, dy=e-res.imgH, L=Math.hypot(dx,dy)||1;
+      seg(0,e, dx/L*7, e+dy/L*7, col, 1.6);       // divergierender Austritt
+      seg(0,e, res.imgX, res.imgH, col, 1.2, [6,4]); // Rückverlängerung → virtuelles Bild
+    }
+  }
+}
+
+function bankDrawScreen(res, t){
+  const sx = BANK.screenX;
+  ctx.save();
+  ctx.strokeStyle='#94a3af'; ctx.lineWidth=Math.max(4, ws(0.32)); ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(wx(sx),wy(BANK_BAR)); ctx.lineTo(wx(sx),wy(-BANK_BAR)); ctx.stroke();
+  ctx.fillStyle='#94a3af';
+  ctx.fillRect(wx(sx)-ws(0.5), wy(-BANK_BAR), ws(1.0), 5);
+  ctx.restore();
+  // Griff-Knopf oben
+  const kx=wx(sx), ky=wy(BANK_BAR)-11;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(kx,ky,11,0,2*Math.PI);
+  ctx.fillStyle='#fff'; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#3a7abf'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(kx,ky,3.5,0,2*Math.PI); ctx.fillStyle='#3a7abf'; ctx.fill();
+  ctx.restore();
+  txt('Schirm', sx, BANK_BAR+0.75, {size:12, col:'#556', align:'center', bg:'rgba(255,255,255,0.85)'});
+  // Bild bzw. Lichtfleck auf dem Schirm
+  if(t.parallel){
+    const r = Math.min(2.6, 2.4*Math.abs(sx-S.f)/S.f + 0.05);
+    bankDrawSpot(sx, 0, r);
+  } else if(res.b !== null && res.b > 0 && res.b <= WX1){
+    bankDrawImage(sx, res);
+  }
+}
+
+function bankDrawSpot(sx, y, r){
+  const px=wx(sx), py=wy(y), rp=Math.max(3, ws(r));
+  const g = ctx.createRadialGradient(px,py,0,px,py,rp);
+  g.addColorStop(0, 'rgba(255,245,170,0.98)');
+  g.addColorStop(0.5,'rgba(255,214,90,0.72)');
+  g.addColorStop(1, 'rgba(255,200,60,0)');
+  ctx.save(); ctx.fillStyle=g;
+  ctx.beginPath(); ctx.arc(px,py,rp,0,2*Math.PI); ctx.fill(); ctx.restore();
+}
+
+function bankDrawImage(sx, res){
+  const col = '#9c27b0';
+  const ih = Math.max(-BANK_BAR, Math.min(BANK_BAR, res.imgH));   // Bild am physischen Schirmrand abschneiden
+  const defocus = Math.abs(sx - res.b);
+  if(defocus <= BANK_SNAP){
+    seg(sx,0,sx,ih,col,3.2);
+    arrowHead(sx,ih,ih>0,col);
+    txt('B', sx+0.55, ih/2, {size:15, col:'#6a1b7a', bg:'rgba(255,255,255,0.85)'});
+    return;
+  }
+  const alpha = Math.max(0.28, 1 - defocus/7);
+  if(BANK_BLUR_OK){
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.filter = `blur(${Math.min(15, 1.5 + defocus*3.5)}px)`;
+    seg(sx,0,sx,ih,col,4);
+    arrowHead(sx,ih,ih>0,col);
+    ctx.restore();
+  } else {
+    const spread = Math.min(1.8, 0.2 + defocus*0.4), n = 5;
+    ctx.save(); ctx.globalAlpha = Math.max(0.1, alpha*0.5);
+    for(let k=-n;k<=n;k++){ const dy = spread*k/n; seg(sx, dy, sx, ih+dy, col, 3); }
+    ctx.restore();
+  }
+}
+
+function bankDrawStatus(res, t){
+  const sx = BANK.screenX;
+  let label, ok=false;
+  if(t.parallel){
+    if(Math.abs(sx-S.f) <= BANK_SNAP){ label='Brennpunkt gefunden'; ok=true; } else label='Lichtfleck unscharf';
+  } else if(res.b === null){ label='Kein Bild (Kerze im Brennpunkt)'; }
+  else if(res.b < 0){ label='Kein Bild auf dem Schirm – Lupe'; }
+  else if(res.b > BANK_SCREEN_MAX){ label='Bild außerhalb der Bank'; }
+  else if(Math.abs(sx-res.b) <= BANK_SNAP){ label='Scharf: ' + bankBildText(res); ok=true; }
+  else label='Unscharf';
+  const col = ok ? '#1a7a3a' : '#b23b2e';
+  const bg  = ok ? 'rgba(214,245,222,0.95)' : 'rgba(250,226,222,0.95)';
+  ctx.save();
+  const fs = Math.max(16, Math.min(22, ws(1.5)));
+  ctx.font = `bold ${fs}px -apple-system,Arial`;
+  const w = ctx.measureText(label).width, padx=14, pady=8;
+  const bw = w + 2*padx, bh = fs + 2*pady, bx = cW/2 - bw/2, by = 30;
+  ctx.fillStyle=bg; ctx.strokeStyle=col; ctx.lineWidth=1.5;
+  bankRoundRect(bx,by,bw,bh,9); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(label, cW/2, by + bh/2);
+  ctx.restore();
+}
+
+function bankUpdateSidebar(res, t){
+  document.getElementById('bank-g-val').textContent = fmt(S.g) + ' cm';
+  document.getElementById('bank-f-val').textContent = fmt(S.f) + ' cm';
+  const sharp = bankIsSharp(res, t);
+  let ready = sharp && !t.parallel;
+  if(t.obs) ready = ready && bankObsComplete();
+  document.getElementById('bank-take').disabled = !ready;
+
+  if(!BANK.fbHold){
+    if(t.parallel){
+      const found = Math.abs(BANK.screenX - S.f) <= BANK_SNAP;
+      if(found){
+        // f bleibt als Kachel verdeckt (sonst vorher ablesbar) – der Wert steht nur im Feedback.
+        BANK.foundF = true;
+        setBankFb('fb-ok', 'Brennpunkt gefunden. Die Brennweite beträgt f &#8776; ' + fmt(S.f) + ' cm. Weiter mit ›.');
+      } else setBankFb('', '');
+    } else if(res.b === null){
+      setBankFb('fb-info', 'Kein Bild: die Kerze steht genau im Brennpunkt (g = f).');
+    } else if(res.b < 0){
+      if(!BANK.lupeTimer && !BANK.lupeShown){
+        BANK.lupeTimer = setTimeout(() => { BANK.lupeShown = true; BANK.lupeTimer = null; if(MODE==='bank') draw(); }, 1200);
+      }
+      setBankFb('fb-info', BANK.lupeShown
+        ? 'Kein auffangbares Bild (g &lt; f). Schau durch die Linse: du siehst ein aufrechtes, vergrößertes Bild – die Lupe.'
+        : 'Der Schirm bleibt leer. Probiere ruhig weiter …');
+    } else if(res.b > BANK_SCREEN_MAX){
+      setBankFb('fb-info', 'Das Bild liegt außerhalb der Bank. Schiebe die Kerze weiter von der Linse weg (größeres g).');
+    } else if(sharp){
+      setBankFb('fb-ok', t.obs && !bankObsComplete()
+        ? 'Scharf! Kreuze noch die Beobachtung an und übernimm dann den Messwert.'
+        : 'Scharf! Lies b an der Achse ab und übernimm den Messwert.');
+    } else {
+      setBankFb('', '');
+    }
+  }
+  // Lupe-Timer aufräumen, sobald der Zustand verlassen wird
+  if(!(res.b !== null && res.b < 0 && !t.parallel)){ bankClearTimer(); BANK.lupeShown = false; }
+}
+
+function bankRenderTable(){
+  const body = document.getElementById('bank-table-body');
+  const empty = document.getElementById('bank-table-empty');
+  body.innerHTML = BANK.rows.map((r,i) =>
+    `<tr><td>${r.g}</td><td>${r.b}</td><td>${r.size}</td><td>${r.obs}</td>`+
+    `<td><button class="bank-del" data-i="${i}" aria-label="Zeile löschen">×</button></td></tr>`).join('');
+  empty.style.display = BANK.rows.length ? 'none' : '';
+}
+
+function bankTake(){
+  const t = BANK_TASKS[bankIdx], res = classify(S.g, S.f);
+  if(t.parallel || !bankIsSharp(res, t)) return;
+  if(t.obs){
+    if(!bankObsComplete()){ BANK.fbHold = true; setBankFb('fb-err', 'Kreuze zuerst Bildgröße, Ausrichtung und Bildart an.'); return; }
+    const okObs = BANK.obs.size===res.size && BANK.obs.orient===res.orient && BANK.obs.type===res.type;
+    if(!okObs){ BANK.fbHold = true; setBankFb('fb-err', 'Schau nochmal genau hin: das Bild ist tatsächlich ' + bankBildText(res) + '. Korrigiere deine Kreuze.'); return; }
+  }
+  BANK.rows.push({ g:fmt(S.g), b:fmt(BANK.screenX), size:res.size, obs:bankBildText(res) });
+  bankRenderTable();
+  BANK.fbHold = true;
+  setBankFb('fb-ok', 'Messwert übernommen: g = ' + fmt(S.g) + ' cm, b = ' + fmt(BANK.screenX) + ' cm.');
+  if(bankIdx === 2 && BANK.rows.length >= 3) document.getElementById('bank-jedesto').classList.remove('hidden');
+  draw();
+}
+
+function bankJeCheck(){
+  const fb = document.getElementById('je-fb');
+  if(!BANK.je.b || !BANK.je.s){ fb.className = 'feedback fb-info'; fb.innerHTML = 'Wähle für beide Lücken ein Wort.'; return; }
+  if(BANK.je.b === 'größer' && BANK.je.s === 'größer'){
+    fb.className = 'feedback fb-ok';
+    fb.innerHTML = 'Richtig. Rückt die Kerze näher an die Linse (aber g &gt; f), werden Bildweite b und Bild größer.';
+  } else {
+    fb.className = 'feedback fb-err';
+    fb.innerHTML = 'Vergleiche deine Messwerte: von g = 7 über 6 zu 4 cm wächst b und das Bild wird größer.';
+  }
+}
+
+// ── Bedien-Verdrahtung (einmalig) ────────────────────────────────────────────
+['size','orient','type'].forEach(cat => {
+  document.querySelectorAll('#bank-obs-'+cat+' button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#bank-obs-'+cat+' button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel'); BANK.obs[cat] = b.dataset.v; BANK.fbHold = false; draw();
+    });
+  });
+});
+[['#je-b','b','je-b-slot'],['#je-s','s','je-s-slot']].forEach(([sel,key,slot]) => {
+  document.querySelectorAll(sel+' button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll(sel+' button').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel'); BANK.je[key] = b.dataset.v; document.getElementById(slot).textContent = b.dataset.v;
+    });
+  });
+});
+document.getElementById('bank-cone').addEventListener('change', e => { BANK.showCone = e.target.checked; draw(); });
+document.getElementById('bank-take').addEventListener('click', bankTake);
+document.getElementById('je-check').addEventListener('click', bankJeCheck);
+document.getElementById('bank-prev').addEventListener('click', () => loadBankTask(Math.max(0, bankIdx-1)));
+document.getElementById('bank-next').addEventListener('click', () => loadBankTask(Math.min(BANK_TASKS.length-1, bankIdx+1)));
+document.getElementById('bank-table-body').addEventListener('click', e => {
+  const b = e.target.closest('.bank-del'); if(!b) return;
+  BANK.rows.splice(+b.dataset.i, 1); bankRenderTable();
+  if(!(bankIdx === 2 && BANK.rows.length >= 3)) document.getElementById('bank-jedesto').classList.add('hidden');
+});
+
+// ── Pointer-Interaktion (Kerze + Schirm) ─────────────────────────────────────
+function bankPointerDown(e){
+  if(!BANK) return;
+  const t = BANK_TASKS[bankIdx];
+  const p = diyPointerWorld(e);
+  const opts = [];
+  if(!t.parallel && !t.lockG){
+    const cy = Math.max(0, Math.min(H, p.y));
+    opts.push(['candle', Math.hypot(wx(p.x)-wx(-S.g), wy(p.y)-wy(cy))]);
+  }
+  const sy = Math.max(-BANK_BAR, Math.min(BANK_BAR, p.y));
+  opts.push(['screen', Math.hypot(wx(p.x)-wx(BANK.screenX), wy(p.y)-wy(sy))]);
+  opts.sort((a,b) => a[1]-b[1]);
+  if(!opts.length || opts[0][1] > 44) return;
+  bankDrag = opts[0][0];
+  BANK.fbHold = false;
+  try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
+  e.preventDefault();
+}
+function bankPointerMove(e){
+  if(!bankDrag) return;
+  const p = diyPointerWorld(e);
+  if(bankDrag === 'candle'){
+    const g = Math.max(0.6, Math.min(13.5, -p.x));
+    S.g = Math.round(g*10)/10;
+    document.getElementById('slg').value = S.g;
+  } else {
+    BANK.screenX = Math.max(BANK_SCREEN_MIN, Math.min(BANK_SCREEN_MAX, p.x));
+  }
+  draw();
+}
+function bankPointerUp(){
+  if(!bankDrag) return;
+  bankDrag = null;
+  draw();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Startmodus: Experiment (virtuelle optische Bank) – MODE steht initial auf
+// 'free', daher greift der Wechsel und lädt Auftrag 1 (Brennweite bestimmen).
+// ════════════════════════════════════════════════════════════════════════════
+switchMode('bank');
+
+// ════════════════════════════════════════════════════════════════════════════
+// iPad-spezifisches Verhalten
+// ════════════════════════════════════════════════════════════════════════════
+// Doppeltap-Zoom ist bereits per CSS (touch-action:manipulation am Body,
+// touch-action:none am Canvas) und per Viewport-Meta unterbunden. Ein
+// zusätzlicher touchend-preventDefault-Blocker schluckte auf iOS den
+// synthetischen Klick, wenn man kurz nach einer Zieh-Geste einen Button
+// tippt (z. B. Schirm ziehen → „Messwert übernehmen") – daher entfernt.
+
+// Pinch-Zoom auf dem Canvas verhindern (lässt Layout sonst „springen")
+document.addEventListener('gesturestart', e=>e.preventDefault());
+
+// Schutz vor Pull-to-Refresh bei Overscroll auf der Seitenleiste
+document.getElementById('sidebar').addEventListener('touchmove', (e)=>{
+  // Nativer Scroll in der Seitenleiste bleibt erlaubt – nichts tun.
+}, {passive: true});
+</script>
+</body>
+</html>

@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Brechung – Simulation</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;-webkit-text-size-adjust:100%;overscroll-behavior:none;touch-action:manipulation}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0d1b2a;color:#e8f4f8;-webkit-font-smoothing:antialiased}
+#app{display:flex;height:100vh;height:100dvh}
+
+/* ── Sidebar ── */
+#sidebar{width:320px;flex-shrink:0;background:#0d1b2a;border-right:2px solid #1e3a5f;padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+h1{font-size:21px;font-weight:800;color:#7ec8e3;line-height:1.2}
+h1 small{display:block;font-size:12px;font-weight:400;color:#8aafc2;margin-top:2px}
+.cg{background:#112236;border-radius:10px;padding:11px;border:1px solid #1e3a5f}
+.cl{font-size:13px;font-weight:700;color:#7ec8e3;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+.cl .v{font-size:16px;font-weight:800;color:#fff}
+.hint{font-size:12px;line-height:1.45;color:#8aafc2}
+
+/* Bauteil-Palette */
+.palette{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pal-b{display:flex;align-items:center;gap:7px;padding:9px 8px;font-size:12.5px;font-weight:700;color:#e8f4f8;
+  background:#071525;border:2px solid #1e3a5f;border-radius:9px;cursor:pointer;text-align:left;line-height:1.15;-webkit-appearance:none}
+.pal-b:hover{border-color:#3a7abf;background:#112236}
+.pal-b:active{background:#1e4d7a}
+.pal-b .ic{font-size:17px;flex-shrink:0}
+
+/* Auswahl-Werkzeuge */
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+.tool-b{flex:1;min-width:54px;padding:9px 6px;font-size:13px;font-weight:800;color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:8px;cursor:pointer;-webkit-appearance:none}
+.tool-b:active{background:#2a6aaa}
+.tool-b.danger{background:#3a1a1a;border-color:#c0392b;color:#ff9a90}
+.tool-b:disabled{opacity:.35;cursor:not-allowed}
+
+/* Radio / Checkbox-Reihen */
+.rad-g,.chk-g{display:flex;flex-direction:column;gap:7px}
+.rad-g label,.chk-g label{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#e8f4f8}
+.rad-g input,.chk-g input{width:20px;height:20px;cursor:pointer;accent-color:#7ec8e3;flex-shrink:0}
+.seg{display:flex;gap:4px;background:#071525;border:1px solid #1e3a5f;border-radius:9px;padding:4px}
+.seg button{flex:1;padding:8px 4px;font-size:12.5px;font-weight:700;color:#8aafc2;background:transparent;border:none;border-radius:6px;cursor:pointer;-webkit-appearance:none}
+.seg button.on{background:#1e4d7a;color:#fff}
+select{width:100%;padding:9px;font-size:14px;font-weight:600;color:#e8f4f8;background:#071525;border:1px solid #1e3a5f;border-radius:8px;-webkit-appearance:none}
+
+/* Messwerte / Readout */
+.ig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.ib{background:#071525;border:1px solid #1e3a5f;border-radius:8px;padding:8px;text-align:center}
+.ib .il{font-size:11px;color:#8aafc2;font-weight:600}
+.ib .iv{font-size:18px;font-weight:800;color:#fff}
+.ib.alpha .iv{color:#f0a050}.ib.beta .iv{color:#7ec8e3}.ib.nval .iv{color:#9ed4f0}
+
+/* Messreihe-Tabelle */
+table.mt{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.mt th,table.mt td{padding:5px 4px;text-align:center;border-bottom:1px solid #1e3a5f}
+table.mt th{color:#8aafc2;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+table.mt td{color:#e8f4f8;font-weight:600}
+table.mt tr:last-child td{border-bottom:none}
+.mt-empty{font-size:12px;color:#6f8aa0;font-style:italic;text-align:center;padding:8px 0}
+.mt-foot{font-size:12.5px;color:#9ed4f0;font-weight:700;margin-top:6px;display:flex;justify-content:space-between;align-items:center}
+
+.btn{width:100%;padding:12px;font-size:15px;font-weight:800;color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:10px;cursor:pointer;-webkit-appearance:none}
+.btn:active{background:#2a6aaa}
+.btn.ghost{background:transparent;color:#8aafc2;border-color:#1e3a5f}
+.btn-sm{padding:9px 10px;font-size:13px;font-weight:700;color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:8px;cursor:pointer;-webkit-appearance:none}
+.btn-sm:active{background:#2a6aaa}
+.btn-sm.secondary{background:transparent;color:#8aafc2;border-color:#1e3a5f}
+
+/* ── Tabs ── */
+#tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#071525;border-radius:10px;padding:4px;border:1px solid #1e3a5f}
+.tab{padding:9px 4px;font-size:12.5px;font-weight:800;color:#8aafc2;background:transparent;border:none;border-radius:7px;cursor:pointer;text-align:center;-webkit-appearance:none}
+.tab.active{background:#1e4d7a;color:#fff}
+
+/* ── Vorhersage-Karten ── */
+.task{background:#112236;border-radius:10px;padding:11px;border:1px solid #1e3a5f;display:flex;flex-direction:column;gap:9px}
+.task-h{font-size:13px;font-weight:800;color:#7ec8e3;display:flex;justify-content:space-between;align-items:center}
+.step-nav{display:flex;gap:4px}
+.nav-b{width:30px;height:30px;border:1px solid #3a7abf;background:#1e4d7a;color:#fff;border-radius:6px;cursor:pointer;font-weight:800;font-size:15px;-webkit-appearance:none}
+.nav-b:disabled{opacity:.3;cursor:not-allowed}
+.task-q{font-size:13.5px;line-height:1.5;color:#e8f4f8}
+.task-q b{color:#7ec8e3}
+.pred-label{font-size:11px;color:#8aafc2;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.pred-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pred-row button{flex:1;min-width:0;padding:10px 6px;font-size:12px;font-weight:700;background:#071525;color:#e8f4f8;border:2px solid #1e3a5f;border-radius:8px;cursor:pointer;-webkit-appearance:none}
+.pred-row button.sel{border-color:#7ec8e3;background:#1e4d7a;color:#fff}
+.pred-row button.correct{border-color:#27ae60;background:#0f2a1a;color:#80ffb0}
+.pred-row button.wrong{border-color:#c0392b;background:#3a1a1a;color:#ff8a80}
+.pred-row button:disabled{cursor:not-allowed}
+.feedback{padding:10px;border-radius:8px;font-size:13px;line-height:1.5;font-weight:600}
+.fb-ok{background:#0f2a1a;border:1px solid #27ae60;color:#80ffb0}
+.fb-err{background:#3a1a1a;border:1px solid #c0392b;color:#ff8a80}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
+/* ── Bühne ── */
+#stage-wrap{flex:1;background:#fff;position:relative;min-width:0;min-height:0;overflow:hidden}
+#stage{display:block;width:100%;height:100%;touch-action:none}
+.stage-tip{position:absolute;left:12px;top:10px;z-index:5;background:rgba(255,255,255,.92);border:1px solid #cfd8e0;border-radius:10px;
+  padding:7px 11px;font-size:12.5px;font-weight:600;color:#33424f;box-shadow:0 2px 6px rgba(0,0,0,.12);max-width:62%;line-height:1.4;pointer-events:none}
+.legend{position:absolute;right:10px;bottom:10px;z-index:5;background:rgba(255,255,255,.92);border:1px solid #cfd8e0;border-radius:10px;
+  padding:8px 11px;font-size:11.5px;color:#33424f;box-shadow:0 2px 6px rgba(0,0,0,.12);line-height:1.7}
+.legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+
+.hidden{display:none !important}
+
+@media (max-aspect-ratio:1/1){
+  #app{flex-direction:column}
+  #sidebar{width:100%;border-right:none;border-bottom:2px solid #1e3a5f;max-height:48vh}
+  #stage-wrap{flex:1;min-height:300px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ════════ Sidebar ════════ -->
+  <div id="sidebar">
+    <h1>Brechung<small>Physik 8. Klasse – freier Experimentier-Aufbau</small></h1>
+
+    <div id="tabs">
+      <button class="tab active" data-mode="build">🔬 Aufbau</button>
+      <button class="tab" data-mode="predict">🎯 Vorhersagen</button>
+    </div>
+
+    <!-- ───── Modus: Aufbau ───── -->
+    <div id="mode-build">
+      <div class="cg">
+        <div class="cl">Bauteile wählen &amp; platzieren</div>
+        <div class="palette">
+          <button class="pal-b" data-add="lamp"><span class="ic">🔦</span>Lampe</button>
+          <button class="pal-b" data-add="halfcyl"><span class="ic">◗</span>Halbzylinder</button>
+          <button class="pal-b" data-add="plate"><span class="ic">▭</span>Planpl. Platte</button>
+          <button class="pal-b" data-add="watertank"><span class="ic">🌊</span>Wassertrog</button>
+          <button class="pal-b" data-add="fiber"><span class="ic">▬</span>Lichtleiter</button>
+          <button class="pal-b" data-add="fiberbend"><span class="ic">⌒</span>Lichtleiter-Bogen</button>
+          <button class="pal-b" data-add="protractor"><span class="ic">◔</span>Winkelscheibe</button>
+          <button class="pal-b" data-add="screen"><span class="ic">▮</span>Schirm</button>
+        </div>
+        <div class="hint" style="margin-top:9px">Tippe oben ein Bauteil an – es erscheint auf der Bühne. Dort verschiebst du es durch Ziehen und drehst es am runden Griff.</div>
+      </div>
+
+      <div class="cg" id="selBox">
+        <div class="cl">Ausgewähltes Bauteil <span class="v" id="selName">–</span></div>
+        <div class="tools">
+          <button class="tool-b" data-rot="-5">⟲ −5°</button>
+          <button class="tool-b" data-rot="-1">⟲ −1°</button>
+          <button class="tool-b" data-rot="1">⟳ +1°</button>
+          <button class="tool-b" data-rot="5">⟳ +5°</button>
+          <button class="tool-b danger" id="delSel">🗑 Entfernen</button>
+        </div>
+      </div>
+
+      <div class="cg">
+        <div class="cl">Lichtquelle</div>
+        <div class="seg" id="raySeg">
+          <button data-rays="1" class="on">Einzelstrahl</button>
+          <button data-rays="3">3 Strahlen</button>
+          <button data-rays="5">5 Strahlen</button>
+        </div>
+        <div class="rad-g" style="margin-top:9px">
+          <label><input type="checkbox" id="optRefl" checked> Reflexion &amp; Totalreflexion zeichnen</label>
+          <label><input type="checkbox" id="optAngle" checked> Winkel α/β &amp; Lot anzeigen</label>
+        </div>
+        <div style="margin-top:9px">
+          <div class="cl" style="margin-bottom:5px">Material der Körper <span class="v" id="matName">Acryl</span></div>
+          <select id="matSel">
+            <option value="1.49" selected>Acrylglas  n = 1,49</option>
+            <option value="1.33">Wasser  n = 1,33</option>
+            <option value="1.52">Kronglas  n = 1,52</option>
+            <option value="2.42">Diamant  n = 2,42</option>
+            <option value="1.0">Luft (kein Effekt) n = 1,00</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cg">
+        <div class="cl">Zwei Medien – Grenzwinkel erkunden</div>
+        <div class="rad-g">
+          <label><input type="checkbox" id="splitOn"> Bühne in zwei Medien teilen</label>
+        </div>
+        <div id="splitSel" style="display:none;gap:8px;margin-top:8px">
+          <div style="flex:1;min-width:0"><div class="cl" style="margin-bottom:4px">oben</div>
+            <select id="medUp">
+              <option value="1.0" selected>Luft  n = 1,00</option>
+              <option value="1.33">Wasser  n = 1,33</option>
+              <option value="1.49">Acrylglas  n = 1,49</option>
+              <option value="1.52">Kronglas  n = 1,52</option>
+              <option value="2.42">Diamant  n = 2,42</option>
+            </select></div>
+          <div style="flex:1;min-width:0"><div class="cl" style="margin-bottom:4px">unten</div>
+            <select id="medDown">
+              <option value="1.0">Luft  n = 1,00</option>
+              <option value="1.33" selected>Wasser  n = 1,33</option>
+              <option value="1.49">Acrylglas  n = 1,49</option>
+              <option value="1.52">Kronglas  n = 1,52</option>
+              <option value="2.42">Diamant  n = 2,42</option>
+            </select></div>
+        </div>
+        <div class="hint" id="splitHint" style="margin-top:8px;display:none">Setze die Lampe ins untere (dichtere) Medium und richte den Strahl schräg nach oben auf die Grenzlinie. Ab welchem α gibt es Totalreflexion? Probiere z.&#8201;B. Wasser→Luft, Acrylglas→Wasser oder Diamant→Luft.</div>
+      </div>
+
+      <div class="cg">
+        <div class="cl">Messung an der 1. Grenzfläche</div>
+        <div class="ig">
+          <div class="ib alpha"><div class="il">α (Einfall)</div><div class="iv" id="rdA">–</div></div>
+          <div class="ib beta"><div class="il">β (Brechung)</div><div class="iv" id="rdB">–</div></div>
+          <div class="ib nval"><div class="il">Brechungsindex n</div><div class="iv" id="rdN">–</div></div>
+        </div>
+        <div class="hint" id="rdNote" style="margin-top:8px"></div>
+        <div style="display:flex;gap:6px;margin-top:9px">
+          <input type="number" id="alphaInp" min="0" max="89" step="1" placeholder="α in °" style="flex:1;min-width:0;padding:6px 8px;border:1px solid #33526f;border-radius:6px;background:#0f2237;color:#dfeaf4;font-size:13px">
+          <button class="btn-sm" id="alphaSet" style="flex:1">α einstellen</button>
+        </div>
+        <button class="btn-sm" id="capBtn" style="width:100%;margin-top:9px">📍 Messwert in Tabelle übernehmen</button>
+        <table class="mt"><thead><tr><th>α</th><th>β</th><th>n = sinα/sinβ</th></tr></thead><tbody id="mtBody"></tbody></table>
+        <div class="mt-empty" id="mtEmpty">Noch keine Messwerte. Stelle einen Winkel ein und übernimm ihn.</div>
+        <div class="mt-foot hidden" id="mtFoot"><span id="mtAvg"></span><button class="btn-sm secondary" id="mtClear">leeren</button></div>
+      </div>
+    </div>
+
+    <!-- ───── Modus: Vorhersagen ───── -->
+    <div id="mode-predict" class="hidden">
+      <div class="task">
+        <div class="task-h">
+          <span id="predTitle">Vorhersage 1 / 5</span>
+          <div class="step-nav">
+            <button class="nav-b" id="predPrev">‹</button>
+            <button class="nav-b" id="predNext">›</button>
+          </div>
+        </div>
+        <div class="task-q" id="predQ">…</div>
+        <div id="predRows"></div>
+        <div class="row2">
+          <button class="btn-sm" id="predCheck">Prüfen</button>
+          <button class="btn-sm secondary" id="predShow">Im Aufbau zeigen</button>
+        </div>
+        <div class="feedback fb-info hidden" id="predFb"></div>
+      </div>
+      <div class="hint">Tipp: Triff zuerst deine Vorhersage, prüfe sie, und überprüfe sie dann mit „Im Aufbau zeigen“ am echten Strahlengang.</div>
+    </div>
+  </div>
+
+  <!-- ════════ Bühne ════════ -->
+  <div id="stage-wrap">
+    <svg id="stage" viewBox="0 0 960 620" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="stage-tip" id="tip">Leere Bühne: Wähle links die Bauteile aus, baue dein Experiment selbst auf und richte den Laserstrahl auf den Körper.</div>
+    <div class="legend">
+      <i style="background:#ff2d2d"></i>Laserstrahl<br>
+      <i style="background:#888"></i>Lot (Senkrechte)<br>
+      <i style="background:#f0a050"></i>α &nbsp;<i style="background:#2e7dd7"></i>β
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(function(){
+const SVGNS='http://www.w3.org/2000/svg';
+function el(tag,attrs){const e=document.createElementNS(SVGNS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+/* ───────── Vektor-Helfer ───────── */
+const V={
+  add:(a,b)=>({x:a.x+b.x,y:a.y+b.y}),
+  sub:(a,b)=>({x:a.x-b.x,y:a.y-b.y}),
+  mul:(a,s)=>({x:a.x*s,y:a.y*s}),
+  dot:(a,b)=>a.x*b.x+a.y*b.y,
+  cross:(a,b)=>a.x*b.y-a.y*b.x,
+  len:a=>Math.hypot(a.x,a.y),
+  norm:a=>{const l=Math.hypot(a.x,a.y)||1;return{x:a.x/l,y:a.y/l};},
+  rot:(a,deg)=>{const r=deg*Math.PI/180,c=Math.cos(r),s=Math.sin(r);return{x:a.x*c-a.y*s,y:a.x*s+a.y*c};}
+};
+const DEG=180/Math.PI, EPS=0.05;
+
+/* ───────── Zustand ───────── */
+const N_AIR=1.0;
+let state={
+  comps:[],          // platzierte Bauteile
+  sel:null,          // id des ausgewählten Bauteils
+  rays:1,            // 1 / 3 / 5
+  nGlass:1.49,
+  matLabel:'Acrylglas',
+  split:{on:false,nUp:1.0,nDown:1.33,upLabel:'Luft',downLabel:'Wasser'},
+  showRefl:true,
+  showAngle:true,
+  mode:'build',
+  measure:null,      // {alpha,beta,tir,R} der 1. Grenzfläche
+  table:[]
+};
+let idSeq=0;
+
+/* Geometrie-Maße (lokale Koordinaten) */
+const DIM={
+  plate:{w:200,h:62},
+  watertank:{w:250,h:150},
+  halfcyl:{r:92},
+  protractor:{r:120},
+  screen:{h:210},
+  lamp:{w:66,h:40},
+  fiber:{w:380,h:26},
+  fiberbend:{R:140,t:13}   // Viertelbogen: Mittenradius + halbe Dicke
+};
+const HANDLE={plate:70,halfcyl:118,protractor:140,screen:128,lamp:50,fiber:46,fiberbend:44};
+const N_WATER=1.33;
+const SPLIT_Y=310; // Höhe der Medien-Grenzlinie im Zwei-Medien-Modus
+
+function addComp(type,x,y,rot){
+  const c={id:++idSeq,type,x:x,y:y,rot:rot||0};
+  state.comps.push(c);
+  state.sel=c.id;
+  render();
+  return c;
+}
+function getSel(){return state.comps.find(c=>c.id===state.sel)||null;}
+
+/* lokale → Welt und zurück */
+function toWorld(c,p){return V.add(V.rot(p,c.rot),{x:c.x,y:c.y});}
+function toLocal(c,p){return V.rot(V.sub(p,{x:c.x,y:c.y}),-c.rot);}
+
+/* ═════════ Optik: Flächen eines Körpers in Weltkoordinaten ═════════
+   seg: gerade Grenzfläche  |  arc: Halbkreisbogen  |  absorber: Schirm   */
+function surfacesOf(c){
+  if(c.type==='plate'||c.type==='watertank'||c.type==='fiber'){
+    const D=DIM[c.type], w=D.w/2,h=D.h/2;
+    const P=[[-w,-h],[w,-h],[w,h],[-w,h]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+    const ctr={x:c.x,y:c.y};
+    const segs=[];
+    for(let i=0;i<4;i++){const a=P[i],b=P[(i+1)%4];segs.push(makeSeg(a,b,ctr,'glass',c.n));}
+    return segs;
+  }
+  if(c.type==='halfcyl'){
+    const r=DIM.halfcyl.r;
+    // flache Seite entlang lokaler x-Achse (y=0), Kuppel auf lokaler +y-Seite
+    const a=toWorld(c,{x:-r,y:0}), b=toWorld(c,{x:r,y:0});
+    const center={x:c.x,y:c.y};
+    const inside=toWorld(c,{x:0,y:r*0.35}); // Referenzpunkt im Körperinneren
+    const flat=makeSeg(a,b,inside,'glass',c.n);
+    const domeDir=V.norm(V.sub(toWorld(c,{x:0,y:1}),center)); // Weltrichtung „in die Kuppel“
+    const arc={kind:'arc',c:center,r:r,domeDir:domeDir,owner:c,n:c.n};
+    return [flat,arc];
+  }
+  if(c.type==='fiberbend'){
+    // Viertelbogen als Polygonzug aus kurzen geraden Grenzflächen – der Raytracer
+    // sieht nur ebene Flächen, Snell/Fresnel/Totalreflexion bleiben exakt.
+    const D=DIM.fiberbend, N=12, segs=[];
+    const arcPts=r=>{const pts=[];for(let i=0;i<=N;i++){const th=Math.PI/2*i/N;
+      pts.push(toWorld(c,{x:r*Math.cos(th),y:r*Math.sin(th)}));}return pts;};
+    const out=arcPts(D.R+D.t), inn=arcPts(D.R-D.t), mid=arcPts(D.R);
+    for(let i=0;i<N;i++){
+      // Innenreferenz je Teilstück: Punkt auf dem Mittenradius
+      const ref={x:(mid[i].x+mid[i+1].x)/2,y:(mid[i].y+mid[i+1].y)/2};
+      segs.push(makeSeg(out[i],out[i+1],ref,'glass',c.n));
+      segs.push(makeSeg(inn[i],inn[i+1],ref,'glass',c.n));
+    }
+    // Stirnflächen an beiden Enden
+    segs.push(makeSeg(inn[0],out[0],mid[1],'glass',c.n));
+    segs.push(makeSeg(inn[N],out[N],mid[N-1],'glass',c.n));
+    return segs;
+  }
+  if(c.type==='screen'){
+    const h=DIM.screen.h/2;
+    const a=toWorld(c,{x:0,y:-h}), b=toWorld(c,{x:0,y:h});
+    return [{kind:'absorber',a:a,b:b,owner:c}];
+  }
+  return []; // Lampe & Winkelscheibe brechen nicht
+}
+function makeSeg(a,b,interiorRef,role,n){
+  // Außennormale: zeigt vom Inneren weg
+  let nrm=V.norm({x:-(b.y-a.y),y:(b.x-a.x)});
+  const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+  if(V.dot(nrm,V.sub(mid,interiorRef))<0) nrm=V.mul(nrm,-1);
+  return {kind:'seg',a:a,b:b,nrm:nrm,role:role,n:n};
+}
+
+function allSurfaces(){
+  let s=[];
+  if(state.split.on && state.split.nUp!==state.split.nDown)
+    s.push({kind:'seg',a:{x:-1500,y:SPLIT_Y},b:{x:2500,y:SPLIT_Y},nrm:{x:0,y:-1},role:'world',n:null});
+  for(const c of state.comps){
+    c.n = c.type==='watertank' ? N_WATER : ((c.type==='plate'||c.type==='halfcyl'||c.type==='fiber'||c.type==='fiberbend') ? state.nGlass : undefined);
+    s=s.concat(surfacesOf(c));
+  }
+  return s;
+}
+
+/* Schnittpunkte */
+function hitSeg(p,d,s){
+  const e=V.sub(s.b,s.a), denom=V.cross(d,e);
+  if(Math.abs(denom)<1e-9) return null;
+  const diff=V.sub(s.a,p);
+  const t=V.cross(diff,e)/denom, u=V.cross(diff,d)/denom;
+  if(t>EPS && u>=-0.001 && u<=1.001) return {t,point:V.add(p,V.mul(d,t)),nrm:s.nrm,n:s.n,kind:s.kind,role:s.role};
+  return null;
+}
+function hitArc(p,d,s){
+  const f=V.sub(p,s.c);
+  const b=2*V.dot(f,d), cc=V.dot(f,f)-s.r*s.r;
+  const disc=b*b-4*cc; if(disc<0) return null;
+  const sq=Math.sqrt(disc);
+  let best=null;
+  for(const t of [(-b-sq)/2,(-b+sq)/2]){
+    if(t<=EPS) continue;
+    const pt=V.add(p,V.mul(d,t));
+    if(V.dot(V.sub(pt,s.c),s.domeDir)<-0.001) continue; // nur Kuppel-Hälfte
+    const nrm=V.norm(V.sub(pt,s.c)); // Außennormale = radial nach außen
+    if(!best||t<best.t) best={t,point:pt,nrm:nrm,n:s.n,kind:'seg',role:'glass'};
+  }
+  return best;
+}
+function nearestHit(p,d){
+  let best=null;
+  for(const s of allSurfaces()){
+    const h=(s.kind==='arc')?hitArc(p,d,s):hitSeg(p,d,s);
+    if(h && (!best||h.t<best.t)) best=h;
+  }
+  return best;
+}
+// Umgebungs-Brechungsindex an einem Punkt (Zwei-Medien-Modus: oben/unten verschieden)
+function ambientAt(p){
+  if(!state.split.on) return N_AIR;
+  return (p.y>=SPLIT_Y) ? state.split.nDown : state.split.nUp;
+}
+
+/* Brechung + Fresnel an einer Grenzfläche */
+function interact(d,nrm,nInside,nOutside){
+  if(nOutside==null) nOutside=N_AIR;
+  const dn=V.dot(d,nrm);
+  let ni,nt,Nin;
+  if(dn<0){ ni=nOutside; nt=nInside; Nin=nrm; }      // Eintritt: außen → innen
+  else    { ni=nInside; nt=nOutside; Nin=V.mul(nrm,-1); } // Austritt: innen → außen
+  const cosi=Math.abs(dn), eta=ni/nt;
+  const sin2t=eta*eta*(1-cosi*cosi);
+  const reflDir=V.norm(V.sub(d,V.mul(nrm,2*dn)));
+  if(sin2t>1) return {tir:true,refl:reflDir,R:1,ni,nt,cosi};
+  const cost=Math.sqrt(1-sin2t);
+  const refrDir=V.norm(V.add(V.mul(d,eta),V.mul(Nin,eta*cosi-cost)));
+  // Fresnel (unpolarisiert)
+  const rs=(ni*cosi-nt*cost)/(ni*cosi+nt*cost);
+  const rp=(ni*cost-nt*cosi)/(ni*cost+nt*cosi);
+  const R=Math.min(1,0.5*(rs*rs+rp*rp));
+  return {tir:false,refr:refrDir,refl:reflDir,R,ni,nt,cosi,cost};
+}
+
+/* Strahl verfolgen → Segmente + Ereignisse
+   Helligkeit eines Segments = physikalische Intensität I (Fresnel-Kaskade), zusätzlich werden
+   Teilreflexionen mit jeder weiteren Reflexion entlang des Wegs gedämpft (DEPTH_DAMP^(hops-1)),
+   damit die ERSTE Teilreflexion am stärksten ist und jede weitere sichtbar schwächer wird.
+   Der Hauptstrahl (refl=0, inkl. Totalreflexion) trägt keine Dämpfung. */
+const DEPTH_DAMP=0.6;
+function visOf(r){ return r.refl===0 ? r.I : r.I*Math.pow(DEPTH_DAMP, Math.max(0,r.hops-1)); }
+function traceBeam(origin,dir,collectEvents){
+  const segs=[], events=[];
+  const stack=[{p:origin,d:V.norm(dir),I:1,hops:0,refl:0,depth:0,primary:collectEvents}];
+  let guard=0;
+  while(stack.length && guard++<300){
+    const r=stack.pop();
+    const vis=visOf(r);
+    const h=nearestHit(r.p,r.d);
+    if(!h){ segs.push({a:r.p,b:V.add(r.p,V.mul(r.d,4000)),vis}); continue; }
+    segs.push({a:r.p,b:h.point,vis});
+    if(h.kind==='absorber'){ continue; } // Schirm verschluckt den Strahl
+    const res=(h.role==='world')
+      ? interact(r.d,h.nrm,state.split.nDown,state.split.nUp)
+      : interact(r.d,h.nrm,h.n,ambientAt(h.point));
+    if(r.primary && events.length<6){
+      const alpha=Math.acos(Math.min(1,res.cosi))*DEG;
+      const beta=res.tir?null:Math.acos(Math.min(1,res.cost))*DEG;
+      events.push({point:h.point,dIn:r.d,nrm:h.nrm,alpha,beta,tir:res.tir,ni:res.ni,nt:res.nt,R:res.R,
+                   dOut:res.tir?null:res.refr});
+    }
+    const off=p2=>V.add(h.point,V.mul(p2,EPS*4));
+    if(res.tir){
+      // Totalreflexion = Hauptstrahl mit voller Intensität (refl bleibt, nur hops zählt weiter)
+      stack.push({p:off(res.refl),d:res.refl,I:r.I,hops:r.hops+1,refl:r.refl,depth:r.depth+1,primary:r.primary});
+    }else{
+      stack.push({p:off(res.refr),d:res.refr,I:r.I*(1-res.R),hops:r.hops+1,refl:r.refl,depth:r.depth+1,primary:r.primary});
+      // Teilreflexion: eigener Zweig, nach Sichtbarkeit (Intensität × Tiefendämpfung) gefiltert
+      const branchVis=r.I*res.R*Math.pow(DEPTH_DAMP,r.hops);
+      if(state.showRefl && branchVis>0.006 && r.depth<8)
+        stack.push({p:off(res.refl),d:res.refl,I:r.I*res.R,hops:r.hops+1,refl:r.refl+1,depth:r.depth+1,primary:false});
+    }
+  }
+  return {segs,events};
+}
+
+// Erste „interessante" Grenzfläche: senkrechten Eintritt (α≈0) überspringen.
+function pickMeasure(evs){
+  for(const e of evs){ if(e.tir || e.alpha>=1) return e; }
+  return evs[0];
+}
+// Brechungsindex richtungs­unabhängig: der Luft-seitige Winkel ist stets der größere.
+function brechzahl(a,b){
+  if(a==null||b==null) return null;
+  const mx=Math.max(a,b), mn=Math.min(a,b);
+  if(mn<0.5) return null;
+  const n=Math.sin(mx/DEG)/Math.sin(mn/DEG);
+  return isFinite(n)?n:null;
+}
+
+/* ═════════ Rendering ═════════ */
+const stage=document.getElementById('stage');
+function clearStage(){while(stage.firstChild)stage.removeChild(stage.firstChild);}
+
+function render(){
+  clearStage();
+  // Clip auf die Bühne
+  const defs=el('defs');
+  const cp=el('clipPath',{id:'stageClip'});cp.appendChild(el('rect',{x:0,y:0,width:960,height:620}));
+  defs.appendChild(cp);
+  // Karo-/Millimeterpapier-Muster: feine Linien alle 24, kräftigere alle 120
+  const pFine=el('pattern',{id:'karoFine',width:24,height:24,patternUnits:'userSpaceOnUse'});
+  pFine.appendChild(el('path',{d:'M 24 0 L 0 0 0 24',fill:'none',stroke:'#e6eef4','stroke-width':1}));
+  defs.appendChild(pFine);
+  const pMaj=el('pattern',{id:'karoMaj',width:120,height:120,patternUnits:'userSpaceOnUse'});
+  pMaj.appendChild(el('path',{d:'M 120 0 L 0 0 0 120',fill:'none',stroke:'#cfe0ee','stroke-width':1.3}));
+  defs.appendChild(pMaj);
+  stage.appendChild(defs);
+  // Karo-Hintergrund (hinter allem)
+  stage.appendChild(el('rect',{x:0,y:0,width:960,height:620,fill:'url(#karoFine)'}));
+  stage.appendChild(el('rect',{x:0,y:0,width:960,height:620,fill:'url(#karoMaj)'}));
+  // Zwei-Medien-Modus: Medien einfärben + Grenzlinie beschriften
+  if(state.split.on){
+    const tint=n=>'rgba(120,180,230,'+Math.min(0.42,Math.max(0,(n-1)*0.28)).toFixed(2)+')';
+    if(state.split.nUp>1) stage.appendChild(el('rect',{x:0,y:0,width:960,height:SPLIT_Y,fill:tint(state.split.nUp)}));
+    if(state.split.nDown>1) stage.appendChild(el('rect',{x:0,y:SPLIT_Y,width:960,height:620-SPLIT_Y,fill:tint(state.split.nDown)}));
+    stage.appendChild(el('line',{x1:0,y1:SPLIT_Y,x2:960,y2:SPLIT_Y,stroke:'#3a7abf','stroke-width':2}));
+    const lu=el('text',{x:12,y:SPLIT_Y-12,'font-size':'14','font-weight':'700',fill:'#2a5f96'});
+    lu.textContent=state.split.upLabel+'  n = '+fmtN(state.split.nUp);stage.appendChild(lu);
+    const ld=el('text',{x:12,y:SPLIT_Y+24,'font-size':'14','font-weight':'700',fill:'#2a5f96'});
+    ld.textContent=state.split.downLabel+'  n = '+fmtN(state.split.nDown);stage.appendChild(ld);
+  }
+
+  const gBody=el('g'),gBeam=el('g',{'clip-path':'url(#stageClip)'}),gAng=el('g'),gHandle=el('g');
+
+  // Lichtquellen sammeln + Strahlen rechnen
+  let firstEvent=null;
+  state.comps.filter(c=>c.type==='lamp').forEach(lamp=>{
+    const dir=V.rot({x:1,y:0},lamp.rot);
+    const perp=V.rot({x:0,y:1},lamp.rot);
+    const n=state.rays, spacing=13;
+    for(let i=0;i<n;i++){
+      const off=(i-(n-1)/2)*spacing;
+      const o=V.add(toWorld(lamp,{x:DIM.lamp.w/2+2,y:0}),V.mul(perp,off));
+      const primary=(i===((n-1)>>1)) ; // mittlerer Strahl trägt die Messung
+      const {segs,events}=traceBeam(o,dir,primary);
+      drawBeam(gBeam,segs);
+      if(primary && events.length) firstEvent=pickMeasure(events);
+    }
+  });
+
+  // Körper zeichnen – die Winkelscheibe liegt immer hinter den übrigen Bauteilen
+  state.comps.filter(c=>c.type==='protractor').forEach(c=>drawComp(gBody,c));
+  state.comps.filter(c=>c.type!=='protractor').forEach(c=>drawComp(gBody,c));
+  // Winkel/Lot an der 1. Grenzfläche
+  state.measure=null;
+  if(state.showAngle && firstEvent) drawAngles(gAng,firstEvent);
+  if(firstEvent) state.measure={alpha:firstEvent.alpha,beta:firstEvent.beta,tir:firstEvent.tir,R:firstEvent.R};
+
+  // Griffe des ausgewählten Bauteils
+  const sel=getSel();
+  if(sel) drawHandles(gHandle,sel);
+
+  stage.appendChild(gBeam);stage.appendChild(gBody);stage.appendChild(gAng);stage.appendChild(gHandle);
+  updateSidebar();
+}
+
+// Wahrnehmungs-Helligkeit: das Auge nimmt Helligkeit ~logarithmisch wahr. So bleibt der
+// Hauptstrahl klar am hellsten, die erste Teilreflexion (~4–5 %) ist gut sichtbar und jede
+// weitere verblasst zügig. Bei streifendem Einfall werden Reflexe von selbst heller (Fresnel).
+function beamOpacity(vis){ return Math.max(0,Math.min(1,1+0.46*Math.log10(Math.max(1e-6,vis)))); }
+function drawBeam(g,segs){
+  for(const s of segs){
+    if(V.len(V.sub(s.b,s.a))<0.5) continue;
+    const vis=Math.max(0,s.vis);
+    const op=beamOpacity(vis);
+    if(op<0.02) continue;
+    const strong=vis>0.5;
+    if(strong) // Glühen nur am hellen Hauptstrahl
+      g.appendChild(el('line',{x1:s.a.x,y1:s.a.y,x2:s.b.x,y2:s.b.y,stroke:'#ff6a4d',
+        'stroke-width':7,'stroke-linecap':'round',opacity:op*0.22}));
+    g.appendChild(el('line',{x1:s.a.x,y1:s.a.y,x2:s.b.x,y2:s.b.y,stroke:'#ff2d2d',
+      'stroke-width':strong?2.4:1.3,'stroke-linecap':'round',opacity:op}));
+  }
+}
+
+function glassPaint(g,pathOrShape){pathOrShape.setAttribute('fill','rgba(120,180,230,0.30)');
+  pathOrShape.setAttribute('stroke','#3a7abf');pathOrShape.setAttribute('stroke-width','2');g.appendChild(pathOrShape);}
+
+function drawComp(g,c){
+  const grp=el('g');
+  if(c.type==='plate'){
+    const w=DIM.plate.w/2,h=DIM.plate.h/2;
+    const P=[[-w,-h],[w,-h],[w,h],[-w,h]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+    const poly=el('polygon',{points:P.map(p=>p.x+','+p.y).join(' ')});glassPaint(grp,poly);
+    tag(grp,c,state.matLabel+'  n='+fmtN(state.nGlass));
+  }else if(c.type==='halfcyl'){
+    // Halbscheibe als abgetasteter Pfad: flache Seite = lokale x-Achse, Kuppel auf lokaler +y-Seite.
+    // (Ein exakter 180°-A-Bogen ist in SVG mehrdeutig und kann die falsche Seite füllen.)
+    const r=DIM.halfcyl.r, steps=30, pts=[];
+    for(let i=0;i<=steps;i++){const th=Math.PI*i/steps;pts.push(toWorld(c,{x:r*Math.cos(th),y:r*Math.sin(th)}));}
+    let d='M '+pts[0].x.toFixed(2)+' '+pts[0].y.toFixed(2);
+    for(let i=1;i<pts.length;i++)d+=' L '+pts[i].x.toFixed(2)+' '+pts[i].y.toFixed(2);
+    d+=' Z';
+    glassPaint(grp,el('path',{d:d}));
+    labelAt(grp,toWorld(c,{x:0,y:r*0.45}),state.matLabel+'  n='+fmtN(state.nGlass));
+  }else if(c.type==='fiber'){
+    const w=DIM.fiber.w/2,h=DIM.fiber.h/2;
+    const P=[[-w,-h],[w,-h],[w,h],[-w,h]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+    const poly=el('polygon',{points:P.map(p=>p.x+','+p.y).join(' ')});glassPaint(grp,poly);
+    labelAt(grp,toWorld(c,{x:0,y:h+16}),'Lichtleiter  n='+fmtN(state.nGlass));
+  }else if(c.type==='fiberbend'){
+    // Zeichnung feiner abgetastet (24 Schritte) als die Physik-Flächen (12) – der
+    // Unterschied liegt unter einem halben Pixel und ist unsichtbar.
+    const D=DIM.fiberbend,N=24,ptsO=[],ptsI=[];
+    for(let i=0;i<=N;i++){const th=Math.PI/2*i/N;
+      ptsO.push(toWorld(c,{x:(D.R+D.t)*Math.cos(th),y:(D.R+D.t)*Math.sin(th)}));
+      ptsI.push(toWorld(c,{x:(D.R-D.t)*Math.cos(th),y:(D.R-D.t)*Math.sin(th)}));}
+    let d='M '+ptsO[0].x.toFixed(2)+' '+ptsO[0].y.toFixed(2);
+    for(let i=1;i<=N;i++)d+=' L '+ptsO[i].x.toFixed(2)+' '+ptsO[i].y.toFixed(2);
+    for(let i=N;i>=0;i--)d+=' L '+ptsI[i].x.toFixed(2)+' '+ptsI[i].y.toFixed(2);
+    d+=' Z';
+    glassPaint(grp,el('path',{d:d}));
+    const lp=toWorld(c,{x:(D.R+D.t+24)*Math.cos(Math.PI/4),y:(D.R+D.t+24)*Math.sin(Math.PI/4)});
+    labelAt(grp,lp,'Lichtleiter  n='+fmtN(state.nGlass));
+  }else if(c.type==='watertank'){
+    drawWatertank(grp,c);
+  }else if(c.type==='protractor'){
+    drawProtractor(grp,c);
+  }else if(c.type==='screen'){
+    drawScreen(grp,c);
+  }else if(c.type==='lamp'){
+    drawLamp(grp,c);
+  }
+  // Auswahl-Hervorhebung
+  if(c.id===state.sel){
+    const bb=compBounds(c);
+    grp.appendChild(el('rect',{x:bb.x,y:bb.y,width:bb.w,height:bb.h,fill:'none',
+      stroke:'#7ec8e3','stroke-width':'1.6','stroke-dasharray':'5 4',rx:8,opacity:.9}));
+  }
+  g.appendChild(grp);
+}
+function fmtN(n){return n.toFixed(2).replace('.',',');}
+// Text mit weißem Halo → bleibt über Glas, Strahl und Skala lesbar.
+function halo(t){t.setAttribute('stroke','#fff');t.setAttribute('stroke-width','3.5');
+  t.setAttribute('paint-order','stroke');t.setAttribute('stroke-linejoin','round');return t;}
+function labelAt(g,p,txt){
+  const t=el('text',{x:p.x,y:p.y+5,'text-anchor':'middle','font-size':12,'font-weight':700,
+    fill:'#2e6da4','font-family':'inherit'});t.textContent=txt;g.appendChild(halo(t));
+}
+function tag(g,c,txt){ labelAt(g,toWorld(c,{x:0,y:0}),txt); }
+
+function drawLamp(g,c){
+  const w=DIM.lamp.w/2,h=DIM.lamp.h/2;
+  const P=[[-w,-h],[w,-h],[w,h],[-w,h]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+  g.appendChild(el('polygon',{points:P.map(p=>p.x+','+p.y).join(' '),fill:'#2c2c34',stroke:'#0c0c10','stroke-width':1.5,rx:6}));
+  // Emitter vorne
+  const e1=toWorld(c,{x:w,y:-h+5}),e2=toWorld(c,{x:w,y:h-5});
+  g.appendChild(el('line',{x1:e1.x,y1:e1.y,x2:e2.x,y2:e2.y,stroke:'#ff2d2d','stroke-width':5,'stroke-linecap':'round'}));
+  // Richtungspfeil
+  const tip=toWorld(c,{x:w+26,y:0}),base=toWorld(c,{x:w+6,y:0});
+  g.appendChild(el('line',{x1:base.x,y1:base.y,x2:tip.x,y2:tip.y,stroke:'#b03020','stroke-width':2}));
+  const al=toWorld(c,{x:w+18,y:-6}),ar=toWorld(c,{x:w+18,y:6});
+  g.appendChild(el('polyline',{points:`${al.x},${al.y} ${tip.x},${tip.y} ${ar.x},${ar.y}`,fill:'none',stroke:'#b03020','stroke-width':2}));
+  const lab=toWorld(c,{x:0,y:0});
+  const t=el('text',{x:lab.x,y:lab.y+4,'text-anchor':'middle','font-size':11,'font-weight':700,fill:'#fff','font-family':'inherit'});
+  t.textContent='Laser';g.appendChild(t);
+}
+
+function drawWatertank(g,c){
+  // Rechteckiges Wasserbecken. Wird NICHT gedreht (rot=0) → die Wasseroberfläche bleibt
+  // immer waagerecht; für schrägen Einfall kippt man stattdessen den Laser.
+  const D=DIM.watertank, w=D.w/2, h=D.h/2;
+  const TL=toWorld(c,{x:-w,y:-h}),TR=toWorld(c,{x:w,y:-h}),BR=toWorld(c,{x:w,y:h}),BL=toWorld(c,{x:-w,y:h});
+  // Wasserfüllung
+  g.appendChild(el('polygon',{points:[TL,TR,BR,BL].map(p=>p.x+','+p.y).join(' '),
+    fill:'rgba(70,150,210,0.30)',stroke:'none'}));
+  // Glaswände als U-Form (links, unten, rechts) – oben offen
+  g.appendChild(el('polyline',{points:[TL,BL,BR,TR].map(p=>p.x+','+p.y).join(' '),
+    fill:'none',stroke:'#4a7a9a','stroke-width':4,'stroke-linejoin':'round','stroke-linecap':'round'}));
+  // Wasseroberfläche (offene Oberkante) betont
+  g.appendChild(el('line',{x1:TL.x,y1:TL.y,x2:TR.x,y2:TR.y,stroke:'#3f86c4','stroke-width':2.5}));
+  labelAt(g,toWorld(c,{x:0,y:h*0.5}),'Wasser  n=1,33');
+}
+
+function drawScreen(g,c){
+  const h=DIM.screen.h/2;
+  const a=toWorld(c,{x:-7,y:-h}),b=toWorld(c,{x:7,y:h});
+  // Mattfläche
+  const P=[[-7,-h],[7,-h],[7,h],[-7,h]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+  g.appendChild(el('polygon',{points:P.map(p=>p.x+','+p.y).join(' '),fill:'#cdd6df',stroke:'#5a6b7a','stroke-width':2}));
+  // Auftreffpunkt(e) – Helligkeit wie der auftreffende Strahl
+  const sp=screenSpots(c);
+  sp.forEach(o=>{
+    const op=beamOpacity(o.vis);
+    if(op<0.04) return;
+    g.appendChild(el('circle',{cx:o.p.x,cy:o.p.y,r:7,fill:'#ff2d2d',opacity:op*0.28}));
+    g.appendChild(el('circle',{cx:o.p.x,cy:o.p.y,r:3,fill:'#ff2d2d',opacity:op}));
+  });
+}
+let lastBeamSegs=[];
+function screenSpots(c){
+  // Auftreffpunkte = Beam-Segmentenden, die auf der Schirmfläche liegen
+  const h=DIM.screen.h/2, res=[];
+  const a=toWorld(c,{x:0,y:-h}), b=toWorld(c,{x:0,y:h});
+  for(const s of lastBeamSegs){
+    const d=distToSeg(s.b,a,b);
+    if(d<3) res.push({p:s.b,vis:s.vis});
+  }
+  return res;
+}
+function distToSeg(p,a,b){const ab=V.sub(b,a),t=Math.max(0,Math.min(1,V.dot(V.sub(p,a),ab)/(V.dot(ab,ab)||1)));
+  const proj=V.add(a,V.mul(ab,t));return V.len(V.sub(p,proj));}
+
+function drawProtractor(g,c){
+  const r=DIM.protractor.r, ctr={x:c.x,y:c.y};
+  g.appendChild(el('circle',{cx:ctr.x,cy:ctr.y,r:r,fill:'rgba(46,125,215,0.05)',stroke:'rgba(46,125,215,0.5)','stroke-width':1.5}));
+  g.appendChild(el('circle',{cx:ctr.x,cy:ctr.y,r:3,fill:'#2e7dd7'}));
+  for(let deg=0;deg<360;deg+=10){
+    const big=(deg%30===0);
+    const a=V.rot({x:1,y:0},c.rot+deg);
+    const p1=V.add(ctr,V.mul(a,r-(big?14:8))), p2=V.add(ctr,V.mul(a,r));
+    g.appendChild(el('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:'rgba(46,125,215,0.6)','stroke-width':big?1.5:0.8}));
+    if(big){
+      const lp=V.add(ctr,V.mul(a,r-26));
+      const t=el('text',{x:lp.x,y:lp.y+4,'text-anchor':'middle','font-size':10,fill:'#2e7dd7','font-family':'inherit'});
+      // 0° an der Achse, dann symmetrisch
+      let val=deg>180?360-deg:deg; t.textContent=val+'°';g.appendChild(t);
+    }
+  }
+  // Bezugslinie (0°-Achse)
+  const ax1=V.add(ctr,V.mul(V.rot({x:1,y:0},c.rot),-r)), ax2=V.add(ctr,V.mul(V.rot({x:1,y:0},c.rot),r));
+  g.appendChild(el('line',{x1:ax1.x,y1:ax1.y,x2:ax2.x,y2:ax2.y,stroke:'rgba(46,125,215,0.45)','stroke-width':1,'stroke-dasharray':'4 4'}));
+}
+
+function drawAngles(g,ev){
+  const p=ev.point;
+  // Lot (Normale) – beidseitig
+  const nA=V.add(p,V.mul(ev.nrm,70)), nB=V.add(p,V.mul(ev.nrm,-70));
+  g.appendChild(el('line',{x1:nB.x,y1:nB.y,x2:nA.x,y2:nA.y,stroke:'#888','stroke-width':1.4,'stroke-dasharray':'6 5'}));
+  const lp=V.add(p,V.mul(ev.nrm, (V.dot(ev.dIn,ev.nrm)<0?-1:1)*82));
+  const lt=el('text',{x:lp.x,y:lp.y,'text-anchor':'middle','font-size':11,'font-style':'italic',fill:'#888','font-family':'inherit'});
+  lt.textContent='Lot';g.appendChild(halo(lt));
+
+  // Normale auf der Quellseite (entgegen Einfallsrichtung)
+  const Nsrc=(V.dot(ev.nrm,ev.dIn)<0)?ev.nrm:V.mul(ev.nrm,-1);
+  drawArc(g,p,Nsrc,V.mul(ev.dIn,-1),34,'#f0a050','α = '+Math.round(ev.alpha)+'°');
+  if(!ev.tir && ev.dOut){
+    drawArc(g,p,V.mul(Nsrc,-1),ev.dOut,28,'#2e7dd7','β = '+Math.round(ev.beta)+'°');
+  }else if(ev.tir){
+    // „Totalreflexion" an den reflektierten Strahl legen – NICHT auf den α-Bogen,
+    // sonst verdeckt der lange Text den Einfallswinkel.
+    const dn=V.dot(ev.dIn,ev.nrm);
+    const rdir=V.norm(V.sub(ev.dIn,V.mul(ev.nrm,2*dn)));      // reflektierter Strahl
+    let perp={x:-rdir.y,y:rdir.x};
+    if(V.dot(perp,ev.dIn)<0) perp=V.mul(perp,-1);             // seitlich versetzen, weg vom Einfall
+    const tp=V.add(V.add(p,V.mul(rdir,62)),V.mul(perp,16));
+    const t=el('text',{x:tp.x,y:tp.y,'text-anchor':'middle','font-size':11.5,'font-weight':800,fill:'#c0392b','font-family':'inherit'});
+    t.textContent='Totalreflexion';g.appendChild(halo(t));
+  }
+}
+function drawArc(g,center,fromDir,toDir,r,color,label){
+  let a0=Math.atan2(fromDir.y,fromDir.x), a1=Math.atan2(toDir.y,toDir.x);
+  let da=a1-a0; while(da<=-Math.PI)da+=2*Math.PI; while(da>Math.PI)da-=2*Math.PI;
+  const sweep=da>0?1:0;
+  const x0=center.x+r*Math.cos(a0),y0=center.y+r*Math.sin(a0);
+  const x1=center.x+r*Math.cos(a1),y1=center.y+r*Math.sin(a1);
+  g.appendChild(el('path',{d:`M ${x0} ${y0} A ${r} ${r} 0 0 ${sweep} ${x1} ${y1}`,fill:'none',stroke:color,'stroke-width':2}));
+  const mid=a0+da/2;
+  const lp={x:center.x+(r+16)*Math.cos(mid),y:center.y+(r+16)*Math.sin(mid)};
+  const t=el('text',{x:lp.x,y:lp.y+4,'text-anchor':'middle','font-size':12.5,'font-weight':800,fill:color,'font-family':'inherit'});
+  t.textContent=label;g.appendChild(halo(t));
+}
+
+/* Griffe (Drehgriff) */
+function drawHandles(g,c){
+  if(c.type==='watertank') return; // Wassertrog wird nicht gedreht (Oberfläche bleibt waagerecht)
+  const hp=handlePoint(c);
+  const ctr={x:c.x,y:c.y};
+  g.appendChild(el('line',{x1:ctr.x,y1:ctr.y,x2:hp.x,y2:hp.y,stroke:'#7ec8e3','stroke-width':1.5,'stroke-dasharray':'3 3'}));
+  g.appendChild(el('circle',{cx:hp.x,cy:hp.y,r:13,fill:'#1e4d7a',stroke:'#7ec8e3','stroke-width':2}));
+  g.appendChild(el('path',{d:rotIcon(hp),fill:'none',stroke:'#fff','stroke-width':1.6}));
+}
+function handlePoint(c){return toWorld(c,{x:0,y:-(HANDLE[c.type]||90)});}
+function rotIcon(p){const r=6;return `M ${p.x-r} ${p.y} A ${r} ${r} 0 1 1 ${p.x} ${p.y+r}`;}
+
+/* Bounding-Box (lokal, achsenparallel grob) für Auswahlrahmen & Treffer */
+function compBounds(c){
+  let corners;
+  if(c.type==='fiberbend'){
+    // Bogen belegt lokal das Quadrat [0..R+t]²
+    const s=DIM.fiberbend.R+DIM.fiberbend.t;
+    corners=[[0,0],[s,0],[s,s],[0,s]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+    return cornersBox(corners);
+  }
+  let w,h,oy=0;
+  if(c.type==='plate'){w=DIM.plate.w;h=DIM.plate.h;}
+  else if(c.type==='fiber'){w=DIM.fiber.w;h=DIM.fiber.h;}
+  else if(c.type==='watertank'){w=DIM.watertank.w;h=DIM.watertank.h;}
+  else if(c.type==='halfcyl'){w=DIM.halfcyl.r*2;h=DIM.halfcyl.r;oy=DIM.halfcyl.r/2;}
+  else if(c.type==='protractor'){w=h=DIM.protractor.r*2;}
+  else if(c.type==='screen'){w=20;h=DIM.screen.h;}
+  else {w=DIM.lamp.w;h=DIM.lamp.h;}
+  // Welt-AABB grob: rotiere die 4 Ecken
+  corners=[[-w/2,-h/2+oy],[w/2,-h/2+oy],[w/2,h/2+oy],[-w/2,h/2+oy]].map(p=>toWorld(c,{x:p[0],y:p[1]}));
+  return cornersBox(corners);
+}
+function cornersBox(corners){
+  const xs=corners.map(p=>p.x),ys=corners.map(p=>p.y);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  return {x:minx-6,y:miny-6,w:maxx-minx+12,h:maxy-miny+12};
+}
+
+/* Treffer-Test: liegt Weltpunkt p im Bauteil c? */
+function hitComp(c,p){
+  const L=toLocal(c,p);
+  if(c.type==='plate') return Math.abs(L.x)<=DIM.plate.w/2+6 && Math.abs(L.y)<=DIM.plate.h/2+6;
+  if(c.type==='fiber') return Math.abs(L.x)<=DIM.fiber.w/2+6 && Math.abs(L.y)<=DIM.fiber.h/2+8;
+  if(c.type==='fiberbend'){const D=DIM.fiberbend,r=Math.hypot(L.x,L.y);
+    return L.x>=-8 && L.y>=-8 && r>=D.R-D.t-8 && r<=D.R+D.t+8;}
+  if(c.type==='watertank') return Math.abs(L.x)<=DIM.watertank.w/2+6 && Math.abs(L.y)<=DIM.watertank.h/2+6;
+  if(c.type==='halfcyl') return (L.x*L.x+L.y*L.y)<=Math.pow(DIM.halfcyl.r+6,2) && L.y>=-8;
+  if(c.type==='protractor'){return Math.hypot(L.x,L.y)<=DIM.protractor.r+4;}
+  if(c.type==='screen') return Math.abs(L.x)<=14 && Math.abs(L.y)<=DIM.screen.h/2+6;
+  return Math.abs(L.x)<=DIM.lamp.w/2+8 && Math.abs(L.y)<=DIM.lamp.h/2+8;
+}
+
+/* ═════════ Zeiger-Interaktion ═════════ */
+let drag=null;
+function clientToSvg(ev){
+  const pt=stage.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;
+  const m=stage.getScreenCTM().inverse();const o=pt.matrixTransform(m);return {x:o.x,y:o.y};
+}
+stage.addEventListener('pointerdown',ev=>{
+  ev.preventDefault();
+  const p=clientToSvg(ev);
+  const sel=getSel();
+  // 1) Drehgriff des aktuell gewählten Bauteils? (Wassertrog dreht nicht)
+  if(sel && sel.type!=='watertank'){const hp=handlePoint(sel);if(V.len(V.sub(p,hp))<=18){drag={id:sel.id,mode:'rotate'};stage.setPointerCapture(ev.pointerId);return;}}
+  // 2) ein Bauteil treffen – erst die echten Bauteile (oberstes zuerst), dann die
+  //    Winkelscheibe darunter. So fängt die große Scheibe keine Klicks auf den Körpern ab,
+  //    lässt sich aber überall auf ihrer Fläche anfassen und verschieben.
+  let ti=-1;
+  for(let i=state.comps.length-1;i>=0 && ti<0;i--)
+    if(state.comps[i].type!=='protractor' && hitComp(state.comps[i],p)) ti=i;
+  if(ti<0) for(let i=state.comps.length-1;i>=0 && ti<0;i--)
+    if(state.comps[i].type==='protractor' && hitComp(state.comps[i],p)) ti=i;
+  if(ti>=0){
+    const c=state.comps[ti];
+    state.sel=c.id;
+    drag={id:c.id,mode:'move',off:V.sub({x:c.x,y:c.y},p)};
+    state.comps.splice(ti,1);state.comps.push(c); // ausgewähltes nach vorne
+    stage.setPointerCapture(ev.pointerId);render();return;
+  }
+  // 3) leer → Auswahl aufheben
+  state.sel=null;render();
+});
+stage.addEventListener('pointermove',ev=>{
+  if(!drag)return;
+  const p=clientToSvg(ev);
+  const c=state.comps.find(x=>x.id===drag.id);if(!c)return;
+  if(drag.mode==='move'){
+    c.x=Math.max(10,Math.min(950,p.x+drag.off.x));
+    c.y=Math.max(10,Math.min(610,p.y+drag.off.y));
+  }else{
+    let deg=Math.atan2(p.y-c.y,p.x-c.x)*DEG+90; // Griff sitzt oben (-y)
+    if(ev.shiftKey) deg=Math.round(deg/5)*5;
+    c.rot=deg;
+  }
+  render();
+});
+function endDrag(ev){if(drag){drag=null;try{stage.releasePointerCapture(ev.pointerId);}catch(e){}}}
+stage.addEventListener('pointerup',endDrag);
+stage.addEventListener('pointercancel',endDrag);
+
+/* ═════════ Sidebar-Logik ═════════ */
+function updateSidebar(){
+  const sel=getSel();
+  document.getElementById('selName').textContent=sel?NAMES[sel.type]:'–';
+  document.getElementById('delSel').disabled=!sel;
+  // Wassertrog wird nicht gedreht → Dreh-Tasten dort gesperrt
+  document.querySelectorAll('.tools .tool-b[data-rot]').forEach(b=>b.disabled=!sel || sel.type==='watertank');
+  // Messung
+  const m=state.measure;
+  const rdA=document.getElementById('rdA'),rdB=document.getElementById('rdB'),rdN=document.getElementById('rdN'),note=document.getElementById('rdNote');
+  if(!m){rdA.textContent=rdB.textContent=rdN.textContent='–';note.textContent='Richte den Strahl auf einen Glaskörper oder die Wasseroberfläche.';document.getElementById('capBtn').disabled=true;}
+  else if(m.tir){rdA.textContent=Math.round(m.alpha)+'°';rdB.textContent='—';rdN.textContent='—';
+    note.innerHTML='<b style="color:#ff8a80">Totalreflexion</b> – kein gebrochener Strahl (α über dem Grenzwinkel). Reflektierter Anteil: <b>100&nbsp;%</b>.';document.getElementById('capBtn').disabled=false;}
+  else{rdA.textContent=Math.round(m.alpha)+'°';rdB.textContent=Math.round(m.beta)+'°';
+    const nn=brechzahl(m.alpha,m.beta);
+    rdN.textContent=nn?fmtN(nn):'–';
+    const pct=(m.R!=null)?(m.R*100<9.95?(m.R*100).toFixed(1):''+Math.round(m.R*100)).replace('.',','):null;
+    note.innerHTML=(pct?'Reflektierter Anteil an dieser Grenzfläche (Teilreflexion): <b>'+pct+'&nbsp;%</b>. ':'')+'Tipp: n = sin(großer Winkel) / sin(kleiner Winkel).';
+    document.getElementById('capBtn').disabled=(nn==null);}
+}
+const NAMES={lamp:'Laser-Lampe',halfcyl:'Halbzylinder',plate:'Planpl. Platte',watertank:'Wassertrog',protractor:'Winkelscheibe',screen:'Schirm',fiber:'Lichtleiter (gerade)',fiberbend:'Lichtleiter (Bogen)'};
+
+/* Palette */
+document.querySelectorAll('.pal-b[data-add]').forEach(b=>b.addEventListener('click',()=>{
+  const t=b.dataset.add;
+  const sp=freeSpot();
+  let x=sp.x,y=sp.y,rot=0;
+  if(t==='lamp'){ y=80; rot=90; }            // Laser standardmäßig oben → Strahl nach unten
+  else if(t==='screen'){ y=545; rot=90; }    // Schirm unten, waagerechte Auffangfläche
+  else if(t==='halfcyl'){ rot=-35; }
+  else if(t==='watertank'){ y=390; rot=0; }  // Becken unten, Wasseroberfläche waagerecht
+  else if(t==='fiber'){ x=480; y=330; rot=0; }      // waagerecht in Bühnenmitte
+  else if(t==='fiberbend'){ x=330; y=200; rot=0; }  // Eintritt unten, Austritt rechts oben
+  addComp(t,x,y,rot);
+}));
+let placeSeq=0;
+function freeSpot(){placeSeq++;return {x:360+(placeSeq%3)*120,y:250+((placeSeq>>1)%2)*120};}
+
+/* Werkzeuge – Drehen in 1°- und 5°-Schritten */
+document.querySelectorAll('.tools .tool-b[data-rot]').forEach(b=>b.addEventListener('click',()=>{
+  const s=getSel();if(s && s.type!=='watertank'){s.rot+=parseFloat(b.dataset.rot);render();}
+}));
+document.getElementById('delSel').addEventListener('click',()=>{const s=getSel();if(s){state.comps=state.comps.filter(c=>c.id!==s.id);state.sel=null;render();}});
+
+/* Strahlen-Umschalter */
+document.querySelectorAll('#raySeg button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#raySeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');state.rays=parseInt(b.dataset.rays);render();
+}));
+document.getElementById('optRefl').addEventListener('change',e=>{state.showRefl=e.target.checked;render();});
+document.getElementById('optAngle').addEventListener('change',e=>{state.showAngle=e.target.checked;render();});
+document.getElementById('matSel').addEventListener('change',e=>{state.nGlass=parseFloat(e.target.value);
+  state.matLabel=e.target.options[e.target.selectedIndex].text.split(' ')[0];
+  document.getElementById('matName').textContent=state.matLabel;render();});
+
+/* Zwei-Medien-Modus */
+document.getElementById('splitOn').addEventListener('change',e=>{
+  state.split.on=e.target.checked;
+  document.getElementById('splitSel').style.display=state.split.on?'flex':'none';
+  document.getElementById('splitHint').style.display=state.split.on?'block':'none';
+  render();
+});
+[['medUp','nUp','upLabel'],['medDown','nDown','downLabel']].forEach(([id,key,lbl])=>{
+  document.getElementById(id).addEventListener('change',e=>{
+    state.split[key]=parseFloat(e.target.value);
+    state.split[lbl]=e.target.options[e.target.selectedIndex].text.split(' ')[0];
+    render();
+  });
+});
+
+/* α gezielt einstellen: Lampe (oder gewählten Körper) schrittweise drehen und nachmessen */
+function probeMeasure(){
+  for(const lamp of state.comps.filter(c=>c.type==='lamp')){
+    const dir=V.rot({x:1,y:0},lamp.rot);
+    const o=toWorld(lamp,{x:DIM.lamp.w/2+2,y:0});
+    const {events}=traceBeam(o,dir,true);
+    if(events.length) return pickMeasure(events);
+  }
+  return null;
+}
+document.getElementById('alphaSet').addEventListener('click',()=>{
+  const target=parseFloat(document.getElementById('alphaInp').value);
+  const note=document.getElementById('rdNote');
+  if(isNaN(target)||target<0||target>89){note.textContent='Bitte einen Winkel zwischen 0° und 89° eingeben.';return;}
+  const sel=getSel();
+  const comp=(sel&&(sel.type==='halfcyl'||sel.type==='plate'))?sel:state.comps.find(c=>c.type==='lamp');
+  if(!comp){note.textContent='Setze zuerst eine Lampe (und einen Körper) auf die Bühne.';return;}
+  const base=comp.rot;
+  let best=base,bestDiff=1e9;
+  for(let d=-90;d<=90;d+=1){
+    comp.rot=base+d;
+    const m=probeMeasure();
+    if(m){const diff=Math.abs(m.alpha-target);if(diff<bestDiff){bestDiff=diff;best=base+d;}}
+  }
+  const b0=best;
+  for(let d=-1;d<=1;d+=0.1){
+    comp.rot=b0+d;
+    const m=probeMeasure();
+    if(m){const diff=Math.abs(m.alpha-target);if(diff<bestDiff){bestDiff=diff;best=comp.rot;}}
+  }
+  comp.rot=best;render();
+  if(bestDiff>1.5){comp.rot=base;render();
+    document.getElementById('rdNote').textContent='α = '+Math.round(target)+'° ist mit diesem Aufbau nicht erreichbar – verschiebe Lampe oder Körper.';}
+});
+
+/* Messreihe-Tabelle */
+document.getElementById('capBtn').addEventListener('click',()=>{
+  const m=state.measure;if(!m)return;
+  if(m.tir){state.table.push({a:Math.round(m.alpha),tir:true});renderTable();return;}
+  const nn=brechzahl(m.alpha,m.beta);
+  if(nn==null)return;
+  state.table.push({a:Math.round(m.alpha),b:Math.round(m.beta),n:nn});
+  renderTable();
+});
+document.getElementById('mtClear').addEventListener('click',()=>{state.table=[];renderTable();});
+function renderTable(){
+  const body=document.getElementById('mtBody');body.innerHTML='';
+  state.table.forEach(r=>{const tr=document.createElement('tr');
+    tr.innerHTML=r.tir?`<td>${r.a}°</td><td>—</td><td style="color:#ff8a80">Totalreflexion</td>`
+                      :`<td>${r.a}°</td><td>${r.b}°</td><td>${fmtN(r.n)}</td>`;body.appendChild(tr);});
+  document.getElementById('mtEmpty').classList.toggle('hidden',state.table.length>0);
+  const foot=document.getElementById('mtFoot');foot.classList.toggle('hidden',state.table.length===0);
+  const norm=state.table.filter(r=>!r.tir);
+  if(norm.length){const avg=norm.reduce((s,r)=>s+r.n,0)/norm.length;
+    document.getElementById('mtAvg').textContent='Ø n = '+fmtN(avg);}
+  else document.getElementById('mtAvg').textContent='';
+}
+
+/* ═════════ Modus-Tabs ═════════ */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  state.mode=t.dataset.mode;
+  document.getElementById('mode-build').classList.toggle('hidden',state.mode!=='build');
+  document.getElementById('mode-predict').classList.toggle('hidden',state.mode!=='predict');
+}));
+
+/* ═════════ Vorhersage-Aufgaben ═════════ */
+const PRED=[
+ {q:'Der Laser trifft unter <b>α = 50°</b> auf die ebene Fläche des Halbzylinders – also <b>Luft → Glas</b>. Sage voraus:',
+  rows:[{label:'Brechung',opts:['zum Lot hin','vom Lot weg','kein Knick'],ans:'zum Lot hin'},
+        {label:'Winkel β',opts:['β > α','β = α','β < α'],ans:'β < α'}],
+  fb:'Richtig: Luft → Glas geht ins optisch <b>dichtere</b> Medium → der Strahl wird <b>zum Lot hin</b> gebrochen, also <b>β &lt; α</b> (bei n≈1,49 ist β≈31°).',
+  setup:()=>scene('halfcyl-air-glass',50)},
+ {q:'Jetzt läuft der Strahl von <b>Glas → Luft</b> und du vergrößerst α immer weiter. Was passiert ab einem bestimmten Winkel (dem Grenzwinkel)?',
+  rows:[{label:'Ergebnis',opts:['stärkere Brechung','Totalreflexion','nichts Besonderes'],ans:'Totalreflexion'}],
+  fb:'Ab dem <b>Grenzwinkel</b> (Glas/Luft ≈ 42°) gibt es keinen gebrochenen Strahl mehr – das Licht wird vollständig zurückgeworfen: <b>Totalreflexion</b>.',
+  setup:()=>scene('glass-air-tir',55)},
+ {q:'Ein Strahl geht schräg durch eine <b>planparallele Platte</b> (Luft→Glas→Luft). Wie verläuft der <b>austretende</b> Strahl im Vergleich zum einfallenden?',
+  rows:[{label:'Austritt',opts:['parallel, seitlich versetzt','in andere Richtung abgelenkt','genau auf gleicher Linie'],ans:'parallel, seitlich versetzt'}],
+  fb:'Die beiden Brechungen heben sich in der Richtung auf: Der Strahl tritt <b>parallel, nur seitlich versetzt</b> wieder aus (Parallelversatz).',
+  setup:()=>scene('plate',45)},
+ {q:'Der Strahl trifft <b>genau senkrecht</b> (entlang des Lots, α = 0°) auf die Grenzfläche. Was passiert?',
+  rows:[{label:'Strahl',opts:['kein Knick','zum Lot hin','vom Lot weg'],ans:'kein Knick'}],
+  fb:'Bei senkrechtem Einfall (α = 0°) wird <b>nicht gebrochen</b> – der Strahl läuft ohne Knick weiter. Brechung braucht schrägen Einfall.',
+  setup:()=>scene('halfcyl-air-glass',0)},
+ {q:'Du <b>verdoppelst</b> den Einfallswinkel α (Luft→Glas). Wie verändert sich der Brechungswinkel β?',
+  rows:[{label:'β',opts:['wächst, aber langsamer','verdoppelt sich genau','bleibt gleich'],ans:'wächst, aber langsamer'}],
+  fb:'β wächst mit α, aber <b>nicht proportional</b>. Beispiel (n≈1,49): α 20°→β 13°, α 40°→β 26°… oben wird es flacher. Konstant bleibt nur sin α / sin β = n.',
+  setup:()=>scene('halfcyl-air-glass',40)},
+ {q:'Der Laser trifft <b>schräg von oben</b> auf die Wasseroberfläche im Wassertrog – also <b>Luft → Wasser</b>. Sage voraus:',
+  rows:[{label:'Brechung',opts:['zum Lot hin','vom Lot weg','kein Knick'],ans:'zum Lot hin'},
+        {label:'Brechungsindex',opts:['n ≈ 1,33','n ≈ 1,49','n ≈ 1,0'],ans:'n ≈ 1,33'}],
+  fb:'Luft → Wasser geht ins optisch <b>dichtere</b> Medium → <b>zum Lot hin</b> gebrochen. Wasser hat <b>n ≈ 1,33</b> – etwas kleiner als Glas (1,49), die Brechung ist also etwas schwächer.',
+  setup:()=>scene('watertank',50)},
+ {q:'<b>Lichtleiter, Teil 1:</b> Der Laser wird schräg (α = 30°) in die <b>Stirnfläche</b> eines geraden Lichtleiters aus Glas eingekoppelt. Wie geht es im Inneren weiter?',
+  rows:[{label:'Verlauf im Lichtleiter',opts:['Zickzack: an den Wänden immer wieder total reflektiert','tritt an der ersten Seitenwand aus','läuft gerade weiter bis zum Ende'],ans:'Zickzack: an den Wänden immer wieder total reflektiert'}],
+  fb:'An der Stirnfläche wird <b>zum Lot hin</b> gebrochen (β ≈ 20°). Dadurch trifft der Strahl die Seitenwände sehr <b>flach</b> – mit α ≈ 70°, weit über dem Grenzwinkel von Glas (≈ 42°). Also: <b>Totalreflexion</b>, immer wieder – der Strahl läuft im Zickzack bis zum Ende. Genau so leitet eine Glasfaser das Licht.',
+  setup:()=>scene('fiber-in',30)},
+ {q:'<b>Lichtleiter, Teil 2:</b> Jetzt zielt der Laser unter α = 45° von oben auf die lange <b>Seitenwand</b> desselben Lichtleiters. Bleibt das Licht wieder „gefangen“?',
+  rows:[{label:'Ergebnis',opts:['nein – es tritt unten wieder aus','ja – Totalreflexion hält es fest','es läuft im Zickzack zum Ende'],ans:'nein – es tritt unten wieder aus'}],
+  fb:'Von der Seite ist der Lichtleiter nur eine dünne <b>planparallele Platte</b>: hinein (zum Lot), hindurch, unten wieder hinaus (vom Lot) – parallel versetzt. <b>Gefangen wird nur Licht, das durch die Stirnfläche einkoppelt:</b> Nur dann trifft es die Wände flach genug (über dem Grenzwinkel) für Totalreflexion.',
+  setup:()=>scene('fiber-side',45)},
+ {q:'<b>Lichtleiter, Teil 3:</b> Das Licht läuft nun in einen <b>gebogenen</b> Lichtleiter (Viertelkreis). Kommt es am anderen Ende an?',
+  rows:[{label:'Ergebnis',opts:['ja – Totalreflexion an der Außenwand führt es um die Kurve','nein – in der Kurve tritt es seitlich aus','ja – das Glas biegt den Strahl gleichmäßig mit'],ans:'ja – Totalreflexion an der Außenwand führt es um die Kurve'}],
+  fb:'In der Kurve läuft der Strahl <b>geradeaus</b>, bis er die <b>Außenwand</b> trifft – so flach, dass er total reflektiert wird. Mehrere „Spiegelungen“ hintereinander führen ihn um die Biegung. So funktionieren <b>Endoskop</b> und <b>Glasfaserkabel</b>: Licht folgt dem Kabel, egal wie es verlegt ist.',
+  setup:()=>scene('fiber-bend',0)}
+];
+let predIdx=0, predSel={};
+function renderPred(){
+  const t=PRED[predIdx];
+  document.getElementById('predTitle').textContent=`Vorhersage ${predIdx+1} / ${PRED.length}`;
+  document.getElementById('predQ').innerHTML=t.q;
+  document.getElementById('predPrev').disabled=predIdx===0;
+  document.getElementById('predNext').disabled=predIdx===PRED.length-1;
+  predSel={};
+  const host=document.getElementById('predRows');host.innerHTML='';
+  t.rows.forEach((r,ri)=>{
+    const lab=document.createElement('div');lab.className='pred-label';lab.textContent=r.label;host.appendChild(lab);
+    const row=document.createElement('div');row.className='pred-row';
+    r.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;
+      b.addEventListener('click',()=>{row.querySelectorAll('button').forEach(x=>x.classList.remove('sel'));
+        b.classList.add('sel');predSel[ri]=o;});row.appendChild(b);});
+    host.appendChild(row);
+  });
+  const fb=document.getElementById('predFb');fb.className='feedback fb-info hidden';fb.textContent='';
+}
+document.getElementById('predPrev').addEventListener('click',()=>{if(predIdx>0){predIdx--;renderPred();}});
+document.getElementById('predNext').addEventListener('click',()=>{if(predIdx<PRED.length-1){predIdx++;renderPred();}});
+document.getElementById('predCheck').addEventListener('click',()=>{
+  const t=PRED[predIdx];let allRight=true,answered=true;
+  const rows=document.querySelectorAll('#predRows .pred-row');
+  t.rows.forEach((r,ri)=>{
+    const sel=predSel[ri];if(sel===undefined){answered=false;return;}
+    rows[ri].querySelectorAll('button').forEach(b=>{
+      b.classList.remove('sel');
+      if(b.textContent===r.ans)b.classList.add('correct');
+      else if(b.textContent===sel)b.classList.add('wrong');
+    });
+    if(sel!==r.ans)allRight=false;
+  });
+  const fb=document.getElementById('predFb');fb.classList.remove('hidden');
+  if(!answered){fb.className='feedback fb-err';fb.innerHTML='Bitte in jeder Zeile eine Vorhersage auswählen.';return;}
+  fb.className='feedback '+(allRight?'fb-ok':'fb-err');
+  fb.innerHTML=(allRight?'✓ ':'✗ ')+t.fb;
+});
+document.getElementById('predShow').addEventListener('click',()=>{
+  PRED[predIdx].setup();
+  // zum Aufbau wechseln
+  document.querySelector('.tab[data-mode="build"]').click();
+});
+
+/* ═════════ Szenen-Vorlagen ═════════ */
+// Lampe so platzieren, dass ihr Strahl unter Richtung deg (0° = nach rechts,
+// 90° = nach unten) im Abstand dist auf den Zielpunkt T trifft.
+function aimLamp(T,deg,dist){
+  const dir=V.rot({x:1,y:0},deg);
+  const M=V.sub(T,V.mul(dir,dist));               // gewünschter Strahl-Startpunkt
+  const off=V.rot({x:DIM.lamp.w/2+2,y:0},deg);    // Mündungs-Versatz zur Lampenmitte
+  addComp('lamp',Math.round(M.x-off.x),Math.round(M.y-off.y),deg);
+}
+function scene(kind,alpha){
+  state.comps=[];state.sel=null;state.rays=1;
+  document.querySelectorAll('#raySeg button').forEach(x=>x.classList.toggle('on',x.dataset.rays==='1'));
+  // Vorhersage-Aufbauten spielen immer in Luft: Zwei-Medien-Modus ausschalten
+  if(state.split.on){
+    state.split.on=false;
+    document.getElementById('splitOn').checked=false;
+    document.getElementById('splitSel').style.display='none';
+    document.getElementById('splitHint').style.display='none';
+  }
+  // Laser läuft von oben nach unten (Lampe oben, rot=90)
+  if(kind==='halfcyl-air-glass'){
+    // flache Fläche zur Lampe, Einfallswinkel = alpha → Körper um alpha kippen
+    addComp('lamp',480,80,90);
+    addComp('halfcyl',480,300,-alpha);
+    addComp('screen',580,560,90);
+  }else if(kind==='glass-air-tir'){
+    // Kuppel zur Lampe: Strahl tritt ohne Knick ein, an der ebenen Fläche Glas→Luft
+    addComp('lamp',480,80,90);
+    addComp('halfcyl',480,300,180-alpha);
+    addComp('screen',580,560,90);
+  }else if(kind==='plate'){
+    addComp('lamp',380,80,90-alpha);
+    addComp('plate',480,300,0);
+    addComp('screen',640,560,90);
+  }else if(kind==='watertank'){
+    // schräg von oben auf die waagerechte Wasseroberfläche (Luft → Wasser)
+    addComp('lamp',Math.round(480-205*Math.tan(alpha/DEG)),80,90-alpha);
+    addComp('watertank',480,360,0);
+  }else if(kind==='fiber-in'){
+    // Einkopplung in die Stirnfläche (alpha = Winkel zur Faserachse)
+    aimLamp({x:290,y:300},alpha,70);
+    addComp('fiber',480,300,0);
+    addComp('screen',760,300,0);   // senkrechter Auffangschirm hinter dem Faserende
+  }else if(kind==='fiber-side'){
+    // schräg von oben auf die lange Seitenwand (Einfallswinkel alpha zum Lot)
+    aimLamp({x:480,y:287},90-alpha,180);
+    addComp('fiber',480,300,0);
+    addComp('screen',640,560,90);
+  }else if(kind==='fiber-bend'){
+    // waagerecht in die untere Stirnfläche des Bogens – Austritt oben rechts
+    aimLamp({x:480,y:440},0,120);
+    addComp('fiberbend',480,300,0);
+    addComp('screen',620,110,90);
+  }
+  state.sel=null;render();
+}
+
+/* ═════════ Start ═════════ */
+// lastBeamSegs für Schirm-Auftreffpunkte aktualisieren
+const _render=render;
+render=function(){
+  lastBeamSegs=[];
+  // sammeln passiert in drawBeam; wir kapseln:
+  _render();
+};
+// drawBeam erweitern, um Segmente zu sammeln
+const _drawBeam=drawBeam;
+drawBeam=function(g,segs){lastBeamSegs=lastBeamSegs.concat(segs);_drawBeam(g,segs);};
+
+renderPred();
+render();   // Start mit leerer Bühne – die SuS wählen alle Bauteile selbst aus
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1366 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Blickfeld eines Tauchers unter Wasser</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --background: rgb(255, 255, 255);
+    --foreground: rgb(26, 28, 31);
+    --card: rgb(244, 246, 248);
+    --card-foreground: rgb(26, 28, 31);
+    --primary: rgb(35, 137, 238);
+    --primary-foreground: rgb(255, 255, 255);
+    --secondary: rgb(255, 255, 255);
+    --secondary-foreground: rgb(26, 28, 31);
+    --muted: rgb(234, 238, 242);
+    --muted-foreground: rgb(94, 105, 116);
+    --accent: rgb(229, 242, 255);
+    --accent-foreground: rgb(22, 90, 153);
+    --border: rgb(211, 218, 225);
+    --input: rgb(193, 203, 213);
+    --ring: rgb(35, 137, 238);
+    --viz-series-1: rgb(51, 156, 255);
+    --viz-series-2: rgb(243, 136, 59);
+    --viz-series-3: rgb(93, 201, 119);
+    --viz-series-4: rgb(235, 119, 177);
+    --viz-series-5: rgb(155, 121, 236);
+    --viz-series-6: rgb(58, 185, 177);
+    --font-size-base: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: rgb(24, 24, 24);
+      --foreground: rgb(255, 255, 255);
+      --card: rgb(45, 45, 45);
+      --card-foreground: rgb(255, 255, 255);
+      --primary: rgb(108, 184, 255);
+      --primary-foreground: rgb(13, 13, 13);
+      --secondary: rgb(54, 54, 54);
+      --secondary-foreground: rgb(255, 255, 255);
+      --muted: rgb(55, 55, 55);
+      --muted-foreground: rgb(190, 194, 199);
+      --accent: rgb(13, 39, 63);
+      --accent-foreground: rgb(131, 195, 255);
+      --border: rgb(73, 73, 73);
+      --input: rgb(89, 89, 89);
+      --ring: rgb(131, 195, 255);
+      --viz-series-1: rgb(131, 195, 255);
+      --viz-series-2: rgb(245, 154, 86);
+      --viz-series-3: rgb(116, 213, 139);
+      --viz-series-4: rgb(240, 143, 192);
+      --viz-series-5: rgb(170, 145, 239);
+      --viz-series-6: rgb(90, 203, 194);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  body { margin: 0; padding: 1rem; background: var(--background); color: var(--foreground); font-size: var(--font-size-base); line-height: 1.45; }
+  button, input { font: inherit; }
+  h2, h3 { font-weight: 500; line-height: 1.25; }
+  h2 { margin: 1.25rem 0 0.5rem; }
+  h3 { font-size: 1.1rem; }
+  strong { font-weight: 500; }
+  .standalone-shell { width: 100%; max-width: 1100px; margin: 0 auto; }
+  .viz-controls { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .form-label { display: block; color: var(--foreground); }
+  .form-range { display: block; width: 100%; min-height: 44px; margin: 0; accent-color: var(--primary); }
+  .btn { min-height: 44px; padding: 0.55rem 0.9rem; border: 1px solid var(--border); border-radius: 0.65rem; background: var(--secondary); color: var(--secondary-foreground); cursor: pointer; touch-action: manipulation; }
+  .btn[aria-pressed="true"], .btn-primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .btn-ghost { background: transparent; }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+  .viz-badge { display: inline-flex; align-items: center; min-height: 2rem; padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--accent); color: var(--accent-foreground); }
+  .card { padding: 1rem; border: 1px solid var(--border); border-radius: 0.9rem; background: var(--card); color: var(--card-foreground); }
+  .form-check { display: flex; align-items: center; gap: 0.65rem; min-height: 44px; }
+  .form-check-input { width: 1.15rem; height: 1.15rem; margin: 0; accent-color: var(--primary); flex: 0 0 auto; }
+  .form-check-label { flex: 1; padding: 0.55rem 0; cursor: pointer; }
+  .text-muted { color: var(--muted-foreground); }
+  :focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+  @media (max-width: 480px) { body { padding: 0.75rem; } }
+</style>
+</head>
+<body>
+<main class="standalone-shell">
+<div id="taucher-optik-sim">
+  <style>
+    #taucher-optik-sim {
+      width: 100%;
+      color: var(--foreground);
+    }
+
+    #taucher-optik-sim .ts-controls {
+      align-items: end;
+      margin-bottom: 1rem;
+    }
+
+    #taucher-optik-sim .ts-app-modes {
+      margin-bottom: 1rem;
+    }
+
+    #taucher-optik-sim .ts-angle-control {
+      flex: 1 1 20rem;
+      min-width: min(100%, 18rem);
+    }
+
+    #taucher-optik-sim .ts-control-head,
+    #taucher-optik-sim .ts-readout,
+    #taucher-optik-sim .ts-quiz-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    #taucher-optik-sim .ts-mode-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    #taucher-optik-sim .ts-readout {
+      justify-content: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    #taucher-optik-sim .ts-views {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: start;
+    }
+
+    #taucher-optik-sim figure {
+      min-width: 0;
+      margin: 0;
+    }
+
+    #taucher-optik-sim figure h3 {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+    }
+
+    #taucher-optik-sim .ts-canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+    }
+
+    #taucher-optik-sim .ts-summary {
+      margin: 0.75rem 0;
+    }
+
+    #taucher-optik-sim .ts-light-chain {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 0.75rem 0 0.5rem;
+    }
+
+    #taucher-optik-sim .ts-light-step {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.5rem;
+      align-items: start;
+    }
+
+    #taucher-optik-sim .ts-light-note {
+      margin: 0.5rem 0 1.25rem;
+    }
+
+    #taucher-optik-sim .ts-quiz {
+      margin-top: 0.5rem;
+    }
+
+    #taucher-optik-sim .ts-quiz-card {
+      margin-top: 0.5rem;
+    }
+
+    #taucher-optik-sim .ts-quiz-card fieldset {
+      border: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    #taucher-optik-sim .ts-quiz-card legend {
+      margin-bottom: 0.75rem;
+    }
+
+    #taucher-optik-sim .ts-answer-list {
+      display: grid;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    #taucher-optik-sim .ts-feedback {
+      min-height: 1.5em;
+      margin: 0.75rem 0;
+    }
+
+    #taucher-optik-sim [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 640px) {
+      #taucher-optik-sim .ts-views {
+        grid-template-columns: 1fr;
+      }
+
+      #taucher-optik-sim .ts-light-chain {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #taucher-optik-sim * {
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+
+  <div class="viz-controls ts-app-modes" role="group" aria-label="Arbeitsmodus wählen">
+    <button class="btn" id="ts-simulation-mode" type="button" aria-pressed="true" aria-controls="ts-simulation-area">Simulation</button>
+    <button class="btn" id="ts-quiz-mode" type="button" aria-pressed="false" aria-controls="ts-quiz-section">Quiz</button>
+  </div>
+
+  <section id="ts-simulation-area" aria-label="Optische Simulation">
+
+  <div class="viz-controls ts-controls" aria-label="Einstellungen der Simulation">
+    <label class="form-label ts-angle-control" for="ts-sun-angle">
+      <span class="ts-control-head">
+        <span>Sonnenwinkel zur Wasseroberfläche</span>
+        <output id="ts-angle-output" for="ts-sun-angle">20°</output>
+      </span>
+      <input class="form-range" id="ts-sun-angle" type="range" min="0" max="90" step="1" value="20">
+    </label>
+
+    <div>
+      <span class="form-label">Wasseroberfläche</span>
+      <div class="ts-mode-controls" role="group" aria-label="Wasseroberfläche wählen">
+        <button class="btn" id="ts-flat-button" type="button" aria-pressed="true">Glatt</button>
+        <button class="btn" id="ts-wave-button" type="button" aria-pressed="false">Wellen</button>
+        <button class="btn btn-ghost" id="ts-pause-button" type="button" aria-pressed="false" hidden>Welle pausieren</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ts-readout" aria-label="Aktuelle Beobachtung">
+    <span class="viz-badge">wirklich: <strong id="ts-real-value">20°</strong></span>
+    <span class="viz-badge">scheinbar: <strong id="ts-apparent-value">45,2°</strong></span>
+    <span class="viz-badge">Fenster: etwa 97°</span>
+  </div>
+
+  <div class="ts-views">
+    <figure>
+      <h3>Lichtweg an der Oberfläche</h3>
+      <canvas class="ts-canvas" id="ts-side-canvas" role="img" aria-label="Seitenansicht mit parallelen Sonnenstrahlen, Brechung, Totalreflexion sowie scheinbarer Sonne und scheinbarem Fisch">
+        Seitenansicht: Parallele Sonnenstrahlen treten ins Wasser ein und beleuchten einen Fisch. Vom Fisch nach oben gestreutes Licht trifft die Oberfläche sehr schräg und wird zum Auge totalreflektiert. Gestrichelte Rückverlängerungen zeigen die scheinbaren Bildorte.
+      </canvas>
+    </figure>
+
+    <figure>
+      <h3>Blick des Tauchers nach oben</h3>
+      <canvas class="ts-canvas" id="ts-window-canvas" role="img" aria-label="Kreisförmiges Snellius-Fenster mit Himmel und Sonne; außerhalb liegt die gespiegelte Unterwasserwelt">
+        Der gesamte Himmel erscheint im kreisförmigen Snellius-Fenster. Außerhalb spiegelt sich die Unterwasserwelt.
+      </canvas>
+    </figure>
+  </div>
+
+  <p class="ts-summary" id="ts-summary"></p>
+
+  <div class="ts-light-chain" aria-label="Weg des Lichts bis zur Totalreflexion">
+    <div class="ts-light-step">
+      <span class="viz-badge" aria-hidden="true">1</span>
+      <span>Sonnenlicht tritt ins Wasser ein und beleuchtet Fisch, Pflanzen und Boden.</span>
+    </div>
+    <div class="ts-light-step">
+      <span class="viz-badge" aria-hidden="true">2</span>
+      <span>Die Gegenstände sind keine Lichtquellen: Sie streuen das Sonnenlicht in viele Richtungen, auch zurück nach oben.</span>
+    </div>
+    <div class="ts-light-step">
+      <span class="viz-badge" aria-hidden="true">3</span>
+      <span>Trifft ein Strahl von unten mit mehr als etwa 49° zum Lot auf die Oberfläche, wird er vollständig ins Wasser zurückgeworfen.</span>
+    </div>
+  </div>
+  <p class="ts-light-note"><strong>Wichtig:</strong> Das Licht kommt nicht erst aus dem Wasser heraus. Es trifft die Grenze von innen, kann gerade nicht in die Luft austreten und wird deshalb totalreflektiert. Seine ursprüngliche Quelle bleibt die Sonne.</p>
+  </section>
+
+  <section class="ts-quiz" id="ts-quiz-section" aria-labelledby="ts-quiz-title" hidden>
+    <h2 id="ts-quiz-title">Quiz</h2>
+    <div class="card ts-quiz-card" id="ts-quiz-card">
+      <div class="ts-control-head">
+        <span id="ts-quiz-progress">Frage 1 von 6</span>
+        <span id="ts-quiz-score">0 Punkte</span>
+      </div>
+      <fieldset id="ts-quiz-fieldset">
+        <legend id="ts-quiz-question"></legend>
+        <div class="ts-answer-list" id="ts-quiz-options"></div>
+      </fieldset>
+      <p class="ts-feedback" id="ts-quiz-feedback" role="status" aria-live="polite"></p>
+      <div class="ts-quiz-actions">
+        <button class="btn btn-primary" id="ts-check-button" type="button" disabled>Antwort prüfen</button>
+        <button class="btn btn-primary" id="ts-next-button" type="button" hidden>Nächste Frage</button>
+        <button class="btn" id="ts-restart-button" type="button" hidden>Quiz wiederholen</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var root = document.getElementById('taucher-optik-sim');
+      if (!root) return;
+
+      var nAir = 1.0;
+      var nWater = 1.333;
+      var criticalRad = Math.asin(nAir / nWater);
+      var criticalDeg = criticalRad * 180 / Math.PI;
+      var reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+      var state = {
+        appMode: 'simulation',
+        angle: 20,
+        waves: false,
+        paused: false,
+        phase: 0.7,
+        raf: 0,
+        reducedMotion: reducedMotionQuery ? reducedMotionQuery.matches : false
+      };
+
+      var angleInput = root.querySelector('#ts-sun-angle');
+      var angleOutput = root.querySelector('#ts-angle-output');
+      var realValue = root.querySelector('#ts-real-value');
+      var apparentValue = root.querySelector('#ts-apparent-value');
+      var flatButton = root.querySelector('#ts-flat-button');
+      var waveButton = root.querySelector('#ts-wave-button');
+      var pauseButton = root.querySelector('#ts-pause-button');
+      var sideCanvas = root.querySelector('#ts-side-canvas');
+      var windowCanvas = root.querySelector('#ts-window-canvas');
+      var summary = root.querySelector('#ts-summary');
+      var simulationArea = root.querySelector('#ts-simulation-area');
+      var quizSection = root.querySelector('#ts-quiz-section');
+      var simulationModeButton = root.querySelector('#ts-simulation-mode');
+      var quizModeButton = root.querySelector('#ts-quiz-mode');
+      root.insertBefore(quizSection, simulationArea);
+      var colorProbe = document.createElement('span');
+      colorProbe.setAttribute('aria-hidden', 'true');
+      colorProbe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none';
+      root.appendChild(colorProbe);
+
+      function radians(degrees) {
+        return degrees * Math.PI / 180;
+      }
+
+      function degrees(rad) {
+        return rad * 180 / Math.PI;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function normalize(vector) {
+        var length = Math.sqrt(vector.x * vector.x + vector.y * vector.y) || 1;
+        return { x: vector.x / length, y: vector.y / length };
+      }
+
+      function dot(a, b) {
+        return a.x * b.x + a.y * b.y;
+      }
+
+      function cross(a, b) {
+        return a.x * b.y - a.y * b.x;
+      }
+
+      function refractedAngleForElevation(elevation) {
+        var incidence = radians(90 - elevation);
+        var argument = clamp((nAir / nWater) * Math.sin(incidence), -1, 1);
+        return Math.asin(argument);
+      }
+
+      function apparentElevation(elevation) {
+        return 90 - degrees(refractedAngleForElevation(elevation));
+      }
+
+      function deNumber(value, decimals) {
+        return value.toFixed(decimals).replace('.', ',');
+      }
+
+      function cssColor(name, fallback) {
+        colorProbe.style.color = fallback;
+        colorProbe.style.color = 'var(' + name + ')';
+        var value = getComputedStyle(colorProbe).color;
+        return value || fallback;
+      }
+
+      function colors() {
+        return {
+          background: cssColor('--background', 'Canvas'),
+          foreground: cssColor('--foreground', 'CanvasText'),
+          card: cssColor('--card', 'Canvas'),
+          border: cssColor('--border', 'GrayText'),
+          muted: cssColor('--muted', 'Canvas'),
+          mutedForeground: cssColor('--muted-foreground', 'GrayText'),
+          sky: cssColor('--viz-series-1', 'Highlight'),
+          water: cssColor('--viz-series-6', 'LinkText'),
+          sun: cssColor('--viz-series-2', 'Highlight'),
+          apparent: cssColor('--viz-series-4', 'LinkText'),
+          reflection: cssColor('--viz-series-5', 'GrayText'),
+          plant: cssColor('--viz-series-3', 'CanvasText')
+        };
+      }
+
+      function prepareCanvas(canvas) {
+        var rect = canvas.getBoundingClientRect();
+        var width = Math.max(280, rect.width || 280);
+        var height = Math.max(210, rect.height || width * 0.75);
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var pixelWidth = Math.round(width * dpr);
+        var pixelHeight = Math.round(height * dpr);
+        if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+          canvas.width = pixelWidth;
+          canvas.height = pixelHeight;
+        }
+        var ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        var rootStyle = getComputedStyle(root);
+        var rootFontSize = Math.max(11, parseFloat(rootStyle.fontSize) || 13);
+        ctx.font = rootFontSize + 'px ' + (rootStyle.fontFamily || 'sans-serif');
+        return { ctx: ctx, width: width, height: height };
+      }
+
+      function surfaceModel(width, height) {
+        var base = height * 0.34;
+        var amp = state.waves ? height * 0.012 : 0;
+        var k1 = 2 * Math.PI / (width * 0.58);
+        var k2 = 2 * Math.PI / (width * 0.34);
+        return {
+          base: base,
+          y: function (x) {
+            if (!state.waves) return base;
+            return base + amp * Math.sin(k1 * x + state.phase) + amp * 0.30 * Math.sin(k2 * x - state.phase * 0.7);
+          },
+          slope: function (x) {
+            if (!state.waves) return 0;
+            return amp * k1 * Math.cos(k1 * x + state.phase) + amp * 0.30 * k2 * Math.cos(k2 * x - state.phase * 0.7);
+          }
+        };
+      }
+
+      function normalAndTangent(surface, x) {
+        var slope = surface.slope(x);
+        var tangent = normalize({ x: 1, y: slope });
+        var normalDown = normalize({ x: -slope, y: 1 });
+        return { tangent: tangent, normalDown: normalDown };
+      }
+
+      function refractAtSurface(airDirection, surface, x) {
+        var axes = normalAndTangent(surface, x);
+        var tangential = dot(airDirection, axes.tangent) * nAir / nWater;
+        tangential = clamp(tangential, -0.999999, 0.999999);
+        var normalPart = Math.sqrt(Math.max(0, 1 - tangential * tangential));
+        return normalize({
+          x: axes.tangent.x * tangential + axes.normalDown.x * normalPart,
+          y: axes.tangent.y * tangential + axes.normalDown.y * normalPart
+        });
+      }
+
+      function rootsBySampling(errorFunction, min, max, preferred) {
+        var steps = 220;
+        var roots = [];
+        var bestX = min;
+        var bestError = Infinity;
+        var previousX = min;
+        var previousError = errorFunction(previousX);
+
+        for (var i = 1; i <= steps; i += 1) {
+          var x = min + (max - min) * i / steps;
+          var error = errorFunction(x);
+          if (Math.abs(error) < bestError) {
+            bestError = Math.abs(error);
+            bestX = x;
+          }
+          if (Number.isFinite(previousError) && Number.isFinite(error) && previousError * error <= 0) {
+            var lo = previousX;
+            var hi = x;
+            var loError = previousError;
+            for (var iteration = 0; iteration < 28; iteration += 1) {
+              var mid = (lo + hi) / 2;
+              var midError = errorFunction(mid);
+              if (loError * midError <= 0) {
+                hi = mid;
+              } else {
+                lo = mid;
+                loError = midError;
+              }
+            }
+            roots.push((lo + hi) / 2);
+          }
+          previousX = x;
+          previousError = error;
+        }
+
+        if (!roots.length) return bestX;
+        roots.sort(function (a, b) {
+          return Math.abs(a - preferred) - Math.abs(b - preferred);
+        });
+        return roots[0];
+      }
+
+      function findRefractionPoint(surface, eye, airDirection, width, height) {
+        var r = refractedAngleForElevation(state.angle);
+        var preferred = eye.x - (eye.y - surface.base) * Math.tan(r);
+        var min = width * 0.055;
+        var max = eye.x - width * 0.025;
+        var errorFunction = function (x) {
+          var point = { x: x, y: surface.y(x) };
+          var desired = normalize({ x: eye.x - x, y: eye.y - point.y });
+          var refracted = refractAtSurface(airDirection, surface, x);
+          return cross(refracted, desired);
+        };
+        var x = rootsBySampling(errorFunction, min, max, clamp(preferred, min, max));
+        return { x: x, y: surface.y(x) };
+      }
+
+      function findReflectionPoint(surface, object, eye, width) {
+        var mirrorEyeY = 2 * surface.base - eye.y;
+        var fraction = (surface.base - object.y) / (mirrorEyeY - object.y);
+        var preferred = object.x + fraction * (eye.x - object.x);
+        var min = width * 0.05;
+        var max = width * 0.96;
+        var errorFunction = function (x) {
+          var point = { x: x, y: surface.y(x) };
+          var incoming = normalize({ x: point.x - object.x, y: point.y - object.y });
+          var axes = normalAndTangent(surface, x);
+          var reflected = normalize({
+            x: incoming.x - 2 * dot(incoming, axes.normalDown) * axes.normalDown.x,
+            y: incoming.y - 2 * dot(incoming, axes.normalDown) * axes.normalDown.y
+          });
+          var desired = normalize({ x: eye.x - point.x, y: eye.y - point.y });
+          return cross(reflected, desired);
+        };
+        var x = rootsBySampling(errorFunction, min, max, clamp(preferred, min, max));
+        return { x: x, y: surface.y(x) };
+      }
+
+      function reflectPointAcrossTangent(point, mirrorPoint, normal) {
+        var offset = { x: point.x - mirrorPoint.x, y: point.y - mirrorPoint.y };
+        var normalDistance = dot(offset, normal);
+        return {
+          x: point.x - 2 * normalDistance * normal.x,
+          y: point.y - 2 * normalDistance * normal.y
+        };
+      }
+
+      function drawText(ctx, text, x, y, color, align) {
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.textAlign = align || 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
+        ctx.restore();
+      }
+
+      function drawSun(ctx, x, y, radius, palette, faint, style) {
+        style = style || {};
+        ctx.save();
+        ctx.globalAlpha = faint ? 0.55 : 1;
+        ctx.fillStyle = style.fill || palette.sun;
+        ctx.strokeStyle = style.stroke || palette.foreground;
+        ctx.lineWidth = 1;
+        if (style.dashed) ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        for (var i = 0; i < 8; i += 1) {
+          var angle = i * Math.PI / 4;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(angle) * (radius + 3), y + Math.sin(angle) * (radius + 3));
+          ctx.lineTo(x + Math.cos(angle) * (radius + 7), y + Math.sin(angle) * (radius + 7));
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawFish(ctx, x, y, size, direction, palette, alpha, rotation, style) {
+        style = style || {};
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation || 0);
+        ctx.scale(direction || 1, 1);
+        ctx.globalAlpha = alpha == null ? 1 : alpha;
+        ctx.fillStyle = style.fill || palette.reflection;
+        ctx.strokeStyle = style.stroke || palette.foreground;
+        ctx.lineWidth = 1;
+        if (style.dashed) ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.7, size * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.62, 0);
+        ctx.lineTo(-size * 1.05, -size * 0.42);
+        ctx.lineTo(-size * 1.05, size * 0.42);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = palette.foreground;
+        ctx.beginPath();
+        ctx.arc(size * 0.35, -size * 0.08, Math.max(1.2, size * 0.07), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function animatedFishPoint(x, y, index, width, height, strength) {
+        if (!state.waves) return { x: x, y: y, rotation: 0 };
+        var amount = strength == null ? 1 : strength;
+        return {
+          x: x + Math.sin(state.phase * 1.80 + index * 1.9) * width * 0.018 * amount,
+          y: y + Math.cos(state.phase * 1.45 + index * 2.35) * height * 0.014 * amount,
+          rotation: Math.sin(state.phase * 1.60 + index * 1.6) * 0.16 * amount
+        };
+      }
+
+      function drawCloud(ctx, x, y, size, palette, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha == null ? 0.8 : alpha;
+        ctx.fillStyle = palette.background;
+        ctx.strokeStyle = palette.foreground;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(x - size * 0.25, y, size * 0.35, size * 0.22, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + size * 0.12, y - size * 0.12, size * 0.42, size * 0.30, 0, 0, Math.PI * 2);
+        ctx.ellipse(x + size * 0.48, y, size * 0.32, size * 0.20, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawNormal(ctx, point, normal, length, palette, labelSide) {
+        ctx.save();
+        ctx.strokeStyle = palette.mutedForeground;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(point.x - normal.x * length, point.y - normal.y * length);
+        ctx.lineTo(point.x + normal.x * length, point.y + normal.y * length);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      function drawArrowOnSegment(ctx, from, to, position, color, size) {
+        var direction = normalize({ x: to.x - from.x, y: to.y - from.y });
+        var point = {
+          x: from.x + (to.x - from.x) * position,
+          y: from.y + (to.y - from.y) * position
+        };
+        var perpendicular = { x: -direction.y, y: direction.x };
+        var arrowSize = size || 5;
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(point.x + direction.x * arrowSize, point.y + direction.y * arrowSize);
+        ctx.lineTo(point.x - direction.x * arrowSize + perpendicular.x * arrowSize * 0.65, point.y - direction.y * arrowSize + perpendicular.y * arrowSize * 0.65);
+        ctx.lineTo(point.x - direction.x * arrowSize - perpendicular.x * arrowSize * 0.65, point.y - direction.y * arrowSize - perpendicular.y * arrowSize * 0.65);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function boundaryPointBackward(point, direction, width, height, margin) {
+        var distances = [];
+        if (direction.x > 0.00001) distances.push((point.x - margin) / direction.x);
+        if (direction.y > 0.00001) distances.push((point.y - margin) / direction.y);
+        var distance = Math.min.apply(Math, distances.filter(function (value) { return value > 0; }));
+        if (!Number.isFinite(distance)) distance = Math.min(width, height) * 0.5;
+        return { x: point.x - direction.x * distance, y: point.y - direction.y * distance };
+      }
+
+      function drawParallelSunGuides(ctx, surface, airDirection, width, height, palette) {
+        var guideXs = [width * 0.36, width * 0.65];
+        ctx.save();
+        ctx.globalAlpha = 0.34;
+        ctx.strokeStyle = palette.sun;
+        ctx.lineWidth = 1.25;
+        guideXs.forEach(function (x) {
+          var hit = { x: x, y: surface.y(x) };
+          var start = boundaryPointBackward(hit, airDirection, width, height, 10);
+          ctx.beginPath();
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(hit.x, hit.y);
+          ctx.stroke();
+          drawArrowOnSegment(ctx, start, hit, 0.68, palette.sun, 4);
+        });
+        ctx.restore();
+        drawText(
+          ctx,
+          width < 380 ? 'einfallend: parallel' : 'einfallende Sonnenstrahlen: parallel',
+          width * 0.97,
+          height * 0.17,
+          palette.sun,
+          'right'
+        );
+      }
+
+      function drawSideView() {
+        var prepared = prepareCanvas(sideCanvas);
+        var ctx = prepared.ctx;
+        var width = prepared.width;
+        var height = prepared.height;
+        var palette = colors();
+        var surface = surfaceModel(width, height);
+
+        ctx.fillStyle = palette.background;
+        ctx.fillRect(0, 0, width, height);
+        ctx.save();
+        ctx.globalAlpha = 0.14;
+        ctx.fillStyle = palette.sky;
+        ctx.fillRect(0, 0, width, surface.base + height * 0.04);
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = palette.water;
+        ctx.fillRect(0, surface.base, width, height - surface.base);
+        ctx.restore();
+
+        var eye = { x: width * 0.88, y: height * 0.82 };
+        var object = animatedFishPoint(width * 0.14, height * 0.42, 0, width, height, 0.95);
+        var alpha = radians(state.angle);
+        var airDirection = normalize({ x: Math.cos(alpha), y: Math.sin(alpha) });
+        var refractionPoint = findRefractionPoint(surface, eye, airDirection, width, height);
+        var reflectionPoint = findReflectionPoint(surface, object, eye, width);
+        var illuminationPoint = findRefractionPoint(surface, object, airDirection, width, height);
+        var refractedDirection = normalize({ x: eye.x - refractionPoint.x, y: eye.y - refractionPoint.y });
+        var surfaceAxes = normalAndTangent(surface, refractionPoint.x);
+        var reflectionAxes = normalAndTangent(surface, reflectionPoint.x);
+        var realSunPoint = boundaryPointBackward(refractionPoint, airDirection, width, height, 18);
+        var illuminationStart = boundaryPointBackward(illuminationPoint, airDirection, width, height, 10);
+        var apparentPoint = boundaryPointBackward(refractionPoint, refractedDirection, width, height, 18);
+        var apparentFish = reflectPointAcrossTangent(object, reflectionPoint, reflectionAxes.normalDown);
+        var reflectionTangentAngle = Math.atan2(reflectionAxes.tangent.y, reflectionAxes.tangent.x);
+        var apparentFishRotation = 2 * reflectionTangentAngle - object.rotation;
+        var sunDirectionsCoincide = Math.abs(cross(airDirection, refractedDirection)) < 0.0001
+          && dot(airDirection, refractedDirection) > 0;
+
+        ctx.save();
+        ctx.strokeStyle = palette.border;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (var x = 0; x <= width; x += 3) {
+          var sy = surface.y(x);
+          if (x === 0) ctx.moveTo(x, sy); else ctx.lineTo(x, sy);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        drawText(ctx, 'Luft', width * 0.97, height * 0.08, palette.mutedForeground, 'right');
+        drawText(ctx, 'Wasser', width * 0.03, surface.base + height * 0.18, palette.mutedForeground);
+
+        var seabedY = height * 0.97;
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        ctx.strokeStyle = palette.plant;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, seabedY);
+        ctx.lineTo(width, seabedY);
+        ctx.stroke();
+        ctx.restore();
+        drawSeaPlant(ctx, width * 0.07, seabedY, height * 0.22, palette, 0.50);
+
+        drawParallelSunGuides(ctx, surface, airDirection, width, height, palette);
+
+        ctx.save();
+        ctx.globalAlpha = 0.50;
+        ctx.strokeStyle = palette.sun;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(illuminationStart.x, illuminationStart.y);
+        ctx.lineTo(illuminationPoint.x, illuminationPoint.y);
+        ctx.lineTo(object.x, object.y);
+        ctx.stroke();
+        drawArrowOnSegment(ctx, illuminationStart, illuminationPoint, 0.58, palette.sun, 4.5);
+        drawArrowOnSegment(ctx, illuminationPoint, object, 0.72, palette.sun, 4.5);
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle = palette.sun;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(realSunPoint.x, realSunPoint.y);
+        ctx.lineTo(refractionPoint.x, refractionPoint.y);
+        ctx.lineTo(eye.x, eye.y);
+        ctx.stroke();
+        drawArrowOnSegment(ctx, realSunPoint, refractionPoint, 0.58, palette.sun, 5);
+        drawArrowOnSegment(ctx, refractionPoint, eye, 0.58, palette.sun, 5);
+        ctx.restore();
+
+        if (!sunDirectionsCoincide) {
+          ctx.save();
+          ctx.strokeStyle = palette.apparent;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 5]);
+          ctx.beginPath();
+          ctx.moveTo(refractionPoint.x, refractionPoint.y);
+          ctx.lineTo(apparentPoint.x, apparentPoint.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+          drawSun(
+            ctx,
+            apparentPoint.x,
+            apparentPoint.y,
+            Math.max(6, width * 0.014),
+            palette,
+            true,
+            { fill: palette.apparent, stroke: palette.apparent, dashed: true }
+          );
+
+          var apparentLabelAlign = apparentPoint.x > width * 0.72 ? 'right' : 'left';
+          var apparentLabelX = apparentPoint.x + (apparentLabelAlign === 'right' ? -12 : 12);
+          var apparentLabelY = apparentPoint.y < surface.base * 0.35 ? apparentPoint.y + 18 : apparentPoint.y - 16;
+          drawText(ctx, 'scheinbare Sonne', apparentLabelX, apparentLabelY, palette.apparent, apparentLabelAlign);
+        }
+
+        drawNormal(ctx, refractionPoint, surfaceAxes.normalDown, height * 0.13, palette, -1);
+        ctx.fillStyle = palette.foreground;
+        ctx.beginPath();
+        ctx.arc(refractionPoint.x, refractionPoint.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        drawSun(ctx, realSunPoint.x, realSunPoint.y, Math.max(6, width * 0.014), palette, false);
+
+        var realLabelAlign = realSunPoint.x > width * 0.72 ? 'right' : 'left';
+        var realLabelX = realSunPoint.x + (realLabelAlign === 'right' ? -12 : 12);
+        var realLabelY = realSunPoint.y < surface.base * 0.35 ? realSunPoint.y + 18 : realSunPoint.y - 16;
+        drawText(
+          ctx,
+          sunDirectionsCoincide ? 'reale = scheinbare Sonne' : 'reale Sonne',
+          realLabelX,
+          realLabelY,
+          palette.foreground,
+          realLabelAlign
+        );
+        drawText(ctx, 'Brechung', refractionPoint.x + (eye.x - refractionPoint.x) * 0.44 - 8, refractionPoint.y + (eye.y - refractionPoint.y) * 0.44, palette.foreground, 'right');
+
+        ctx.save();
+        ctx.strokeStyle = palette.reflection;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(object.x, object.y);
+        ctx.lineTo(reflectionPoint.x, reflectionPoint.y);
+        ctx.lineTo(eye.x, eye.y);
+        ctx.stroke();
+        drawArrowOnSegment(ctx, object, reflectionPoint, 0.48, palette.reflection, 4.5);
+        drawArrowOnSegment(ctx, reflectionPoint, eye, 0.55, palette.reflection, 4.5);
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle = palette.apparent;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 5]);
+        ctx.beginPath();
+        ctx.moveTo(reflectionPoint.x, reflectionPoint.y);
+        ctx.lineTo(apparentFish.x, apparentFish.y);
+        ctx.stroke();
+        ctx.restore();
+
+        var apparentFishSize = Math.max(7, width * 0.025);
+        drawFish(
+          ctx,
+          apparentFish.x,
+          apparentFish.y,
+          apparentFishSize,
+          -1,
+          palette,
+          0.42,
+          apparentFishRotation,
+          { fill: palette.apparent, stroke: palette.apparent, dashed: true }
+        );
+        drawText(
+          ctx,
+          'scheinbarer Fisch',
+          apparentFish.x + apparentFishSize * 1.1,
+          apparentFish.y - apparentFishSize * 1.15,
+          palette.apparent
+        );
+
+        drawNormal(ctx, reflectionPoint, reflectionAxes.normalDown, height * 0.10, palette, 1);
+        drawFish(ctx, object.x, object.y, Math.max(7, width * 0.025), -1, palette, 0.9, object.rotation);
+        drawText(ctx, 'Totalreflexion', reflectionPoint.x + (eye.x - reflectionPoint.x) * 0.18, reflectionPoint.y + (eye.y - reflectionPoint.y) * 0.18 - 18, palette.foreground, 'center');
+
+        ctx.save();
+        ctx.strokeStyle = palette.foreground;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(eye.x, eye.y, Math.max(7, width * 0.017), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(eye.x + width * 0.016, eye.y);
+        ctx.lineTo(eye.x + width * 0.038, eye.y);
+        ctx.stroke();
+        ctx.restore();
+        drawText(ctx, 'Auge', eye.x + width * 0.045, eye.y, palette.foreground);
+      }
+
+      function windowPath(cx, cy, radius) {
+        var path = new Path2D();
+        var points = 144;
+        for (var i = 0; i <= points; i += 1) {
+          var angle = i / points * Math.PI * 2;
+          var wobble = state.waves
+            ? radius * (0.018 * Math.sin(4 * angle + state.phase * 1.7) + 0.010 * Math.sin(7 * angle - state.phase))
+            : 0;
+          var rr = radius + wobble;
+          var x = cx + Math.cos(angle) * rr;
+          var y = cy + Math.sin(angle) * rr;
+          if (i === 0) path.moveTo(x, y); else path.lineTo(x, y);
+        }
+        path.closePath();
+        return path;
+      }
+
+      function mappedSkyPoint(cx, cy, radius, elevation, azimuth) {
+        var r = refractedAngleForElevation(elevation);
+        var rho = radius * r / criticalRad;
+        var az = azimuth;
+        if (state.waves) {
+          var strength = 0.25 + 0.75 * rho / radius;
+          rho += radius * strength * (0.016 * Math.sin(3 * az + state.phase * 1.8) + 0.009 * Math.sin(6 * az - state.phase));
+          az += 0.022 * strength * Math.sin(4 * az - state.phase * 1.3);
+        }
+        return { x: cx + Math.cos(az) * rho, y: cy + Math.sin(az) * rho };
+      }
+
+      function drawSeaPlant(ctx, x, y, height, palette, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = palette.plant;
+        ctx.lineWidth = 2;
+        for (var i = -1; i <= 1; i += 1) {
+          ctx.beginPath();
+          ctx.moveTo(x + i * 5, y);
+          ctx.bezierCurveTo(x + i * 9, y - height * 0.35, x - i * 8, y - height * 0.65, x + i * 4, y - height);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawWindowView() {
+        var prepared = prepareCanvas(windowCanvas);
+        var ctx = prepared.ctx;
+        var width = prepared.width;
+        var height = prepared.height;
+        var palette = colors();
+
+        ctx.fillStyle = palette.background;
+        ctx.fillRect(0, 0, width, height);
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = palette.water;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+
+        var cx = width * 0.51;
+        var cy = height * 0.52;
+        var radius = Math.min(width * 0.34, height * 0.40);
+
+        drawText(ctx, 'Spiegelbild der Unterwasserwelt', width * 0.03, height * 0.06, palette.foreground);
+        var reflectedFishA = animatedFishPoint(width * 0.14, height * 0.28, 1, width, height, 1.15);
+        var reflectedFishB = animatedFishPoint(width * 0.86, height * 0.29, 2, width, height, 1.10);
+        var reflectedFishC = animatedFishPoint(width * 0.83, height * 0.78, 3, width, height, 1.20);
+        drawFish(ctx, reflectedFishA.x, reflectedFishA.y, Math.max(8, width * 0.033), -1, palette, 0.62, reflectedFishA.rotation);
+        drawFish(ctx, reflectedFishB.x, reflectedFishB.y, Math.max(7, width * 0.027), 1, palette, 0.56, reflectedFishB.rotation);
+        drawFish(ctx, reflectedFishC.x, reflectedFishC.y, Math.max(8, width * 0.03), -1, palette, 0.58, reflectedFishC.rotation);
+        drawSeaPlant(ctx, width * 0.10, height * 0.94, height * 0.22, palette, 0.56);
+
+        var path = windowPath(cx, cy, radius);
+        ctx.save();
+        ctx.clip(path);
+        ctx.fillStyle = palette.background;
+        ctx.fillRect(cx - radius * 1.12, cy - radius * 1.12, radius * 2.24, radius * 2.24);
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = palette.sky;
+        ctx.fillRect(cx - radius * 1.15, cy - radius * 1.15, radius * 2.3, radius * 2.3);
+        ctx.globalAlpha = 1;
+
+        var clouds = [
+          { elevation: 8, azimuth: -0.2, size: 0.10 },
+          { elevation: 18, azimuth: 2.7, size: 0.12 },
+          { elevation: 36, azimuth: 0.9, size: 0.13 },
+          { elevation: 55, azimuth: -2.0, size: 0.14 },
+          { elevation: 72, azimuth: 0.15, size: 0.12 }
+        ];
+        clouds.forEach(function (cloud) {
+          var point = mappedSkyPoint(cx, cy, radius, cloud.elevation, cloud.azimuth);
+          drawCloud(ctx, point.x, point.y, radius * cloud.size, palette, 0.82);
+        });
+
+        if (state.waves) {
+          ctx.save();
+          ctx.globalAlpha = 0.13;
+          ctx.fillStyle = palette.water;
+          for (var patch = 0; patch < 6; patch += 1) {
+            var patchAngle = patch * Math.PI / 3 + state.phase * 0.35;
+            ctx.beginPath();
+            ctx.ellipse(
+              cx + Math.cos(patchAngle) * radius * 0.88,
+              cy + Math.sin(patchAngle) * radius * 0.88,
+              radius * 0.16,
+              radius * 0.045,
+              patchAngle + Math.PI / 2,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
+        var sunPoint = mappedSkyPoint(cx, cy, radius, state.angle, -2.28);
+        drawSun(ctx, sunPoint.x, sunPoint.y, Math.max(7, radius * 0.075), palette, false);
+        drawText(ctx, 'scheinbare Sonne', sunPoint.x + radius * 0.10, sunPoint.y - radius * 0.09, palette.foreground);
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle = palette.border;
+        ctx.lineWidth = 2;
+        ctx.stroke(path);
+        ctx.restore();
+
+        drawText(ctx, 'Horizont', cx, cy + radius - 12, palette.foreground, 'center');
+        drawText(ctx, 'Zenit', cx, cy + radius * 0.13, palette.foreground, 'center');
+      }
+
+      function updateTextAndAccessibility() {
+        var apparent = apparentElevation(state.angle);
+        angleOutput.textContent = state.angle + '°';
+        realValue.textContent = state.angle + '°';
+        apparentValue.textContent = deNumber(apparent, 1) + '°';
+
+        if (state.angle === 90) {
+          summary.textContent = state.waves
+            ? 'Die Sonne steht im Zenit. An geneigten Wellenabschnitten trifft ihr Licht jedoch nicht entlang des lokalen Lots ein und wird deshalb gebrochen.'
+            : 'Im Zenit läuft der Sonnenstrahl entlang des Lots: Reale und scheinbare Sonnenrichtung stimmen überein.';
+        } else if (state.angle === 0) {
+          summary.textContent = 'Am Horizont erscheint die Sonne am Rand des Snellius-Fensters. Der ganze Himmel bleibt innerhalb dieses Randes.';
+        } else {
+          summary.textContent = 'Beim Eintritt ins Wasser wird das Sonnenlicht zum Lot hin gebrochen. Darum erscheint die Sonne höher und näher am Zenit.';
+        }
+        summary.textContent += ' Die Sonnenstrahlen treffen vor der Oberfläche parallel ein. Außerhalb des Fensters sieht der Taucher Sonnenlicht, das von Unterwasserobjekten nach oben gestreut und an der Oberfläche totalreflektiert wurde.';
+        if (state.waves) {
+          summary.textContent += ' Jede Stelle der Welle besitzt dabei ihr eigenes Lot; deshalb werden die zuvor parallelen Strahlen nach dem Eintritt unterschiedlich gebrochen und das Bild flimmert. Auch die Fische und ihre Lichtwege bewegen sich mit dem Wellengang.';
+        }
+
+        var modeText = state.waves ? 'wellige Oberfläche' : 'glatte Oberfläche';
+        sideCanvas.setAttribute('aria-label', 'Seitenansicht bei ' + state.angle + ' Grad Sonnenhöhe und ' + modeText + '. Die einfallenden Sonnenstrahlen sind parallel. Sonnenlicht tritt ins Wasser ein und beleuchtet den Fisch. Vom Fisch nach oben gestreutes Licht wird an der Oberfläche zum Auge totalreflektiert. Gestrichelte Rückverlängerungen markieren die scheinbare Sonne und den scheinbaren Fisch.');
+        windowCanvas.setAttribute('aria-label', 'Blick nach oben bei ' + state.angle + ' Grad realer Sonnenhöhe. Die scheinbare Sonne erscheint unter Wasser bei ' + deNumber(apparent, 1) + ' Grad innerhalb des Snellius-Fensters. Außerhalb liegt die gespiegelte Unterwasserwelt.');
+      }
+
+      function drawAll() {
+        if (simulationArea.hidden) return;
+        drawSideView();
+        drawWindowView();
+      }
+
+      function stopAnimation() {
+        if (state.raf) {
+          cancelAnimationFrame(state.raf);
+          state.raf = 0;
+        }
+      }
+
+      function animationFrame(time) {
+        state.raf = 0;
+        if (simulationArea.hidden || !state.waves || state.paused || state.reducedMotion || document.hidden) return;
+        state.phase = time * 0.00045;
+        drawAll();
+        state.raf = requestAnimationFrame(animationFrame);
+      }
+
+      function startAnimation() {
+        stopAnimation();
+        if (!simulationArea.hidden && state.waves && !state.paused && !state.reducedMotion && !document.hidden) {
+          state.raf = requestAnimationFrame(animationFrame);
+        }
+      }
+
+      function updateModeButtons() {
+        flatButton.setAttribute('aria-pressed', state.waves ? 'false' : 'true');
+        waveButton.setAttribute('aria-pressed', state.waves ? 'true' : 'false');
+        pauseButton.hidden = !state.waves || state.reducedMotion;
+        pauseButton.setAttribute('aria-pressed', state.paused ? 'true' : 'false');
+        pauseButton.textContent = state.paused ? 'Welle fortsetzen' : 'Welle pausieren';
+      }
+
+      function updateSimulation() {
+        updateModeButtons();
+        updateTextAndAccessibility();
+        drawAll();
+        startAnimation();
+      }
+
+      function setAppMode(mode) {
+        state.appMode = mode === 'quiz' ? 'quiz' : 'simulation';
+        var quizActive = state.appMode === 'quiz';
+        simulationModeButton.setAttribute('aria-pressed', quizActive ? 'false' : 'true');
+        quizModeButton.setAttribute('aria-pressed', quizActive ? 'true' : 'false');
+        quizSection.hidden = !quizActive;
+        simulationArea.hidden = quizActive && !quiz.answered;
+        if (simulationArea.hidden) stopAnimation(); else updateSimulation();
+      }
+
+      simulationModeButton.addEventListener('click', function () {
+        setAppMode('simulation');
+      });
+
+      quizModeButton.addEventListener('click', function () {
+        setAppMode('quiz');
+      });
+
+      angleInput.addEventListener('input', function () {
+        state.angle = Number(angleInput.value);
+        updateTextAndAccessibility();
+        drawAll();
+      });
+
+      flatButton.addEventListener('click', function () {
+        state.waves = false;
+        state.paused = false;
+        updateSimulation();
+      });
+
+      waveButton.addEventListener('click', function () {
+        state.waves = true;
+        state.paused = false;
+        updateSimulation();
+      });
+
+      pauseButton.addEventListener('click', function () {
+        state.paused = !state.paused;
+        updateModeButtons();
+        drawAll();
+        startAnimation();
+      });
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) stopAnimation(); else startAnimation();
+      });
+
+      if (reducedMotionQuery) {
+        var motionChange = function (event) {
+          state.reducedMotion = event.matches;
+          updateSimulation();
+        };
+        if (typeof reducedMotionQuery.addEventListener === 'function') {
+          reducedMotionQuery.addEventListener('change', motionChange);
+        } else if (typeof reducedMotionQuery.addListener === 'function') {
+          reducedMotionQuery.addListener(motionChange);
+        }
+      }
+
+      var resizeTimer = 0;
+      function handleResize() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(drawAll, 80);
+      }
+      window.addEventListener('resize', handleResize);
+      if (typeof ResizeObserver === 'function') {
+        var resizeObserver = new ResizeObserver(handleResize);
+        resizeObserver.observe(root);
+      }
+
+      var questions = [
+        {
+          question: 'Die Sonne steht knapp über dem Horizont. Wo sieht der Taucher sie?',
+          options: ['Am Rand des Snellius-Fensters', 'Außerhalb des Fensters', 'Genau im Zenit'],
+          correct: 0,
+          explanation: 'Licht vom Lufthorizont erscheint am Rand des Snellius-Fensters.'
+        },
+        {
+          question: 'Warum erscheint eine tief stehende Sonne unter Wasser höher?',
+          options: ['Ihr Licht wird in der Luft totalreflektiert.', 'Ihr Licht wird beim Eintritt ins Wasser gebrochen.', 'Die Sonne bewegt sich für den Taucher nach oben.'],
+          correct: 1,
+          explanation: 'Beim Übergang von Luft zu Wasser wird der Lichtstrahl zum Lot hin gebrochen.'
+        },
+        {
+          question: 'Wo befindet sich der gesamte Himmel im Blick des Tauchers?',
+          options: ['Nur in der Mitte des Fensters', 'Außerhalb des Fensters', 'Innerhalb des Snellius-Fensters'],
+          correct: 2,
+          explanation: 'Der Himmel von Horizont zu Horizont wird in das kreisförmige Fenster zusammengedrängt.'
+        },
+        {
+          question: 'Was sieht der Taucher außerhalb des Snellius-Fensters?',
+          options: ['Nur eine schwarze Fläche', 'Die gespiegelte Unterwasserwelt', 'Den restlichen Himmel'],
+          correct: 1,
+          explanation: 'Dort wird Licht, das Unterwasserobjekte nach oben streuen, an der Wasseroberfläche totalreflektiert. Die Oberfläche wirkt deshalb wie ein Spiegel.'
+        },
+        {
+          question: 'Wie kann Sonnenlicht totalreflektiert werden, obwohl die Sonne über dem Wasser steht?',
+          options: [
+            'Es tritt zuerst ins Wasser ein, wird an Gegenständen gestreut und trifft danach von unten sehr schräg auf die Oberfläche.',
+            'Es wird bereits beim Eintritt von der Luft ins Wasser totalreflektiert.',
+            'Unterwassergegenstände erzeugen selbst neues Sonnenlicht.',
+            'Jeder nach oben laufende Lichtstrahl wird vollständig zurückgeworfen.'
+          ],
+          correct: 0,
+          explanation: 'Die Sonne bleibt die Lichtquelle. Erst ein von Fisch, Boden oder Pflanzen neu ausgerichteter Strahl kann die Oberfläche von unten mit einem ausreichend großen Winkel zum Lot treffen.'
+        },
+        {
+          question: 'Was verändert eine Welle am Auftreffpunkt eines Lichtstrahls?',
+          options: ['Den Brechungsindex des Wassers', 'Die wirkliche Position der Sonne', 'Die Richtung des lokalen Lots'],
+          correct: 2,
+          explanation: 'Die geneigte Wasserfläche besitzt ein geneigtes lokales Lot und lenkt die Strahlen deshalb anders ab.'
+        }
+      ];
+
+      var quiz = { index: 0, score: 0, answered: false };
+      var quizProgress = root.querySelector('#ts-quiz-progress');
+      var quizScore = root.querySelector('#ts-quiz-score');
+      var quizFieldset = root.querySelector('#ts-quiz-fieldset');
+      var quizQuestion = root.querySelector('#ts-quiz-question');
+      var quizOptions = root.querySelector('#ts-quiz-options');
+      var quizFeedback = root.querySelector('#ts-quiz-feedback');
+      var checkButton = root.querySelector('#ts-check-button');
+      var nextButton = root.querySelector('#ts-next-button');
+      var restartButton = root.querySelector('#ts-restart-button');
+      var quizPresets = [
+        { angle: 0, waves: false },
+        { angle: 15, waves: false },
+        { angle: 45, waves: false },
+        { angle: 30, waves: false },
+        { angle: 25, waves: false },
+        { angle: 45, waves: true }
+      ];
+
+      function revealQuizSimulation(index) {
+        var preset = quizPresets[index] || quizPresets[0];
+        state.angle = preset.angle;
+        state.waves = preset.waves;
+        state.paused = false;
+        angleInput.value = String(state.angle);
+        simulationArea.hidden = false;
+        updateSimulation();
+      }
+
+      function renderQuizQuestion() {
+        var item = questions[quiz.index];
+        quiz.answered = false;
+        if (state.appMode === 'quiz') {
+          simulationArea.hidden = true;
+          stopAnimation();
+        }
+        quizProgress.textContent = 'Frage ' + (quiz.index + 1) + ' von ' + questions.length;
+        quizScore.textContent = quiz.score + (quiz.score === 1 ? ' Punkt' : ' Punkte');
+        quizQuestion.textContent = item.question;
+        quizFeedback.textContent = '';
+        quizOptions.textContent = '';
+        quizFieldset.hidden = false;
+        checkButton.hidden = false;
+        checkButton.disabled = true;
+        nextButton.hidden = true;
+        restartButton.hidden = true;
+
+        item.options.forEach(function (option, index) {
+          var wrapper = document.createElement('div');
+          wrapper.className = 'form-check';
+          var input = document.createElement('input');
+          input.className = 'form-check-input';
+          input.type = 'radio';
+          input.name = 'ts-quiz-answer';
+          input.id = 'ts-answer-' + quiz.index + '-' + index;
+          input.value = String(index);
+          var label = document.createElement('label');
+          label.className = 'form-check-label';
+          label.setAttribute('for', input.id);
+          label.textContent = option;
+          input.addEventListener('change', function () {
+            checkButton.disabled = false;
+          });
+          wrapper.appendChild(input);
+          wrapper.appendChild(label);
+          quizOptions.appendChild(wrapper);
+        });
+      }
+
+      function finishQuiz() {
+        quizProgress.textContent = 'Quiz beendet';
+        quizScore.textContent = quiz.score + ' von ' + questions.length + ' Punkten';
+        quizFieldset.hidden = true;
+        checkButton.hidden = true;
+        nextButton.hidden = true;
+        restartButton.hidden = false;
+        if (quiz.score === questions.length) {
+          quizFeedback.textContent = 'Alles richtig. Du kannst Brechung und Totalreflexion sicher unterscheiden.';
+        } else if (quiz.score >= 3) {
+          quizFeedback.textContent = 'Gut gelöst. Schau dir die Darstellungen noch einmal an und versuche es erneut.';
+        } else {
+          quizFeedback.textContent = 'Nutze den Sonnenregler und vergleiche Brechung, Fenster und Spiegelbereich noch einmal.';
+        }
+      }
+
+      checkButton.addEventListener('click', function () {
+        if (quiz.answered) return;
+        var selected = quizOptions.querySelector('input[name="ts-quiz-answer"]:checked');
+        if (!selected) return;
+        quiz.answered = true;
+        var item = questions[quiz.index];
+        var selectedIndex = Number(selected.value);
+        if (selectedIndex === item.correct) {
+          quiz.score += 1;
+          quizFeedback.textContent = 'Richtig. ' + item.explanation + ' Die passende Simulation ist jetzt unter der Antwort eingeblendet.';
+        } else {
+          quizFeedback.textContent = 'Noch nicht. ' + item.explanation + ' Die passende Simulation ist jetzt unter der Antwort eingeblendet.';
+        }
+        Array.prototype.forEach.call(quizOptions.querySelectorAll('input'), function (input) {
+          input.disabled = true;
+        });
+        quizScore.textContent = quiz.score + (quiz.score === 1 ? ' Punkt' : ' Punkte');
+        checkButton.hidden = true;
+        nextButton.hidden = false;
+        nextButton.textContent = quiz.index === questions.length - 1 ? 'Ergebnis anzeigen' : 'Nächste Frage';
+        revealQuizSimulation(quiz.index);
+        nextButton.focus();
+      });
+
+      nextButton.addEventListener('click', function () {
+        quiz.index += 1;
+        if (quiz.index >= questions.length) {
+          finishQuiz();
+        } else {
+          renderQuizQuestion();
+          var firstOption = quizOptions.querySelector('input');
+          if (firstOption) firstOption.focus();
+        }
+      });
+
+      restartButton.addEventListener('click', function () {
+        quiz.index = 0;
+        quiz.score = 0;
+        renderQuizQuestion();
+        var firstOption = quizOptions.querySelector('input');
+        if (firstOption) firstOption.focus();
+      });
+
+      renderQuizQuestion();
+      setAppMode('simulation');
+    }());
+  </script>
+</div>
+
+</main>
+</body>
+</html>
