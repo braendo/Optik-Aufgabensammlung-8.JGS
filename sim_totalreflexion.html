@@ -86,6 +86,25 @@
 </style>
 </head>
 <body>
+<!-- ══════════ Zurück-zur-Aufgabe-Button (Sim läuft in eigenem Tab) ══════════ -->
+<style>
+.sim-back-btn{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;
+  padding:8px 13px;font:800 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  color:#fff;background:#1e4d7a;border:2px solid #3a7abf;border-radius:9px;cursor:pointer;
+  -webkit-appearance:none;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.sim-back-btn:active{background:#2a6aaa}
+@media print{.sim-back-btn{display:none!important}}
+</style>
+<script>
+/* Zurück zur Aufgabensammlung: Der Sim-Tab wurde von index.html per window.open
+   geöffnet und schließt sich damit selbst; der ursprüngliche Aufgaben-Tab wird
+   wieder aktiv. Wurde die Datei ausnahmsweise direkt (ohne Aufgabenseite) geöffnet,
+   verweigert der Browser das Schließen – dann als Fallback zur Aufgabenseite navigieren. */
+function simGoBack(){
+  window.close();
+  setTimeout(function(){ if(!window.closed) location.href = 'index.html'; }, 250);
+}
+</script>
 <main class="standalone-shell">
 <div id="taucher-optik-sim">
   <style>
@@ -227,6 +246,8 @@
       }
     }
   </style>
+
+  <button type="button" class="sim-back-btn" onclick="simGoBack()">&#8617; Zur&uuml;ck zur Aufgabe</button>
 
   <div class="viz-controls ts-app-modes" role="group" aria-label="Arbeitsmodus wählen">
     <button class="btn" id="ts-simulation-mode" type="button" aria-pressed="true" aria-controls="ts-simulation-area">Simulation</button>
