@@ -499,11 +499,11 @@
     <span class="sim-launcher-hint">Zusatz: Im Experiment-Modus an einer virtuellen optischen Bank scharf stellen und messen, dazu den Strahlengang erkunden, Vorhersagen treffen und die Bildkonstruktion Schritt für Schritt durchgehen.</span>
   </div>
 
-  <!-- Zusatz-Option: 3D-Linsenwerkstatt (nur Thema Sammellinse) – öffnet dieselbe
-       Werkstatt wie Aufgabe E12, Fortschritt/Benotung laufen über deren Instanz. -->
+  <!-- Zusatz-Option: 3D-Hinführung zur Sammellinse (nur Thema Sammellinse) – öffnet
+       dieselbe Hinführung wie Aufgabe E12, Fortschritt/Benotung laufen über deren Instanz. -->
   <div id="simLauncherL" class="sim-launcher">
-    <button id="simOpenL" class="sim-open-btn" type="button">&#128295; 3D-Werkstatt starten</button>
-    <span class="sim-launcher-hint">Zusatz: In der 3D-Werkstatt schleifst du selbst eine Sammel- und eine Streulinse – Prismen stapeln, die Achse kurbeln und die Krümmung schleifen, bis der Brennpunkt sitzt (Aufträge 1–5). Zählt zu Aufgabe E12.</span>
+    <button id="simOpenL" class="sim-open-btn" type="button">&#128270; 3D-Hinführung starten</button>
+    <span class="sim-launcher-hint">Zusatz: Die 3D-Hinführung führt dich in acht Schritten zur Sammellinse – von den Linsen im Alltag über Prisma und Prismen-Turm bis Brennpunkt, Brennweite und Bild auf dem Schirm. Zählt zu Aufgabe E12.</span>
   </div>
 
   <!-- Zusatz-Option: interaktive Brechungs-Simulation (Themen Brechung sowie Totalreflexion & Lichtleiter) -->
@@ -2368,34 +2368,30 @@ function createLupenaugeInteraktion(container, spec){
   return { hasUserInput, grade, result, reveal };
 }
 
-/* ---------- 4b) Linsenbau: 3D-Werkstatt im neuen Tab (Aufgabe E12) ----------
+/* ---------- 4b) Linsenbau: 3D-Hinführung im neuen Tab (Aufgabe E12) ----------
    Die Karte zeigt nur Start-Button + Status; die eigentliche Simulation läuft in
    einem eigenen Browser-Tab (sim_linsenbau.html) und meldet Fortschritt/Erfolg per
    postMessage zurück (Verdrahtung im Script-Block am Dateiende). setSolved/setProgress werden dort
    asynchron aufgerufen und stoßen über spec.onmoved dieselbe Kette an wie bei allen
    anderen interaktiven Typen (Prüf-Button freischalten + Fortschritt). */
 function createLinsenbauInteraktion(container, spec){
-  const state = { started: false, solved: false, progress: {} };
-  const CORE = [1, 2, 3, 4, 5, 8];                 // interne Kern-Level-Ids (Abbildung = 8)
+  const state = { started: false, solved: false, seen: 0, total: 0 };
   container.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start;padding:4px 0 2px">
-      <button class="sim-open-btn lb-start" type="button">&#128295; 3D-Werkstatt starten</button>
+      <button class="sim-open-btn lb-start" type="button">&#128270; 3D-Hinführung starten</button>
       <div class="lb-status" style="font-size:14px;line-height:1.45"></div>
     </div>`;
   const btn = container.querySelector('.lb-start');
   const status = container.querySelector('.lb-status');
-  function countProgress(){
-    let n = 0;
-    for (let i = 0; i < CORE.length; i++) if (state.progress[CORE[i]]) n++;
-    return n;
-  }
   function renderStatus(){
     if (state.solved) {
-      status.innerHTML = '<b style="color:var(--ok,#2e9e5b)">&#10004; Werkstatt gemeistert</b> – alle sechs Aufträge erledigt. Jetzt unten die Antwort prüfen!';
+      status.innerHTML = '<b style="color:var(--ok,#2e9e5b)">&#10004; Hinführung abgeschlossen</b> – du hast die 3D-Tour einmal ganz durchlaufen. Jetzt unten die Antwort prüfen!';
     } else if (state.started) {
-      status.innerHTML = 'Aufträge erledigt: <b>' + countProgress() + ' / 6</b> – du kannst die Werkstatt jederzeit wieder öffnen.';
+      status.innerHTML = state.total
+        ? ('Schritte gesehen: <b>' + state.seen + ' / ' + state.total + '</b> – geh die Tour mit &bdquo;Weiter&ldquo; bis zum letzten Schritt durch.')
+        : 'Läuft – geh die 3D-Tour bis zum Ende durch.';
     } else {
-      status.innerHTML = 'Noch nicht gestartet – öffne die Werkstatt und erledige die Aufträge 1–6.';
+      status.innerHTML = 'Noch nicht gestartet – öffne die 3D-Hinführung und geh sie einmal ganz durch.';
     }
   }
   btn.addEventListener('click', () => {
@@ -2408,14 +2404,21 @@ function createLinsenbauInteraktion(container, spec){
   function grade(){
     const ok = state.solved;
     const fb = ok
-      ? 'Stark! Du hast alle sechs Aufträge gemeistert und sowohl eine Sammellinse als auch eine Streulinse geschliffen – und sie sogar Bilder machen lassen.'
-      : 'Du warst schon in der Werkstatt, hast aber erst ' + countProgress() + ' von 6 Aufträgen erledigt. Öffne sie erneut und schleife weiter – dann klappt auch die volle Punktzahl.';
+      ? 'Stark! Du hast die 3D-Hinführung komplett durchlaufen – von den Linsen im Alltag über Prisma, Brennpunkt und Brennweite bis zum Bild auf dem Schirm.'
+      : (state.started
+          ? ('Du hast die Hinführung geöffnet, aber noch nicht bis zum Ende durchlaufen' + (state.total ? (' (' + state.seen + ' von ' + state.total + ' Schritten)') : '') + '. Öffne sie erneut und klick dich mit &bdquo;Weiter&ldquo; bis zum letzten Schritt.')
+          : 'Du hast die 3D-Hinführung noch nicht gestartet. Öffne sie und geh sie einmal ganz durch.');
     return { ok, fb };
   }
   function result(){ return grade(); }
   function reveal(){ return grade(); }
-  function setSolved(){ state.solved = true; for (let i = 0; i < CORE.length; i++) state.progress[CORE[i]] = true; renderStatus(); if (spec.onmoved) spec.onmoved(); }
-  function setProgress(level){ if (level >= 1 && level <= 9) state.progress[level] = true; renderStatus(); if (spec.onmoved) spec.onmoved(); }
+  function setSolved(){ state.solved = true; if (state.total) state.seen = state.total; renderStatus(); if (spec.onmoved) spec.onmoved(); }
+  function setProgress(seen, total){
+    if (typeof total === 'number' && total > 0) state.total = total;
+    if (typeof seen === 'number' && seen > state.seen) state.seen = seen;
+    renderStatus();
+    if (spec.onmoved) spec.onmoved();
+  }
   function getState(){ return state; }
   renderStatus();
   return { hasUserInput, grade, result, reveal, setSolved, setProgress, getState };
@@ -3896,7 +3899,7 @@ const QUESTIONS = [
 {
  id: "E12", topic: "Sammellinse", diff: 2, type: "linsenbau",
  inter: {},
- q: "<b>Werde Linsen-Schleifer!</b> In der 3D-Werkstatt baust du zuerst eine <b>Sammellinse</b> und danach eine <b>Streulinse</b>: Du lenkst Licht mit Prismen, kurbelst den Stapel selbst um die Achse und schleifst die Krümmung, bis der Brennpunkt sitzt. Erledige die <b>Aufträge 1 bis 5</b> und prüfe danach hier deine Antwort. Vor wichtigen Schritten gibst du erst eine <b>Vermutung</b> ab – falsch tippen kostet nichts, Hauptsache du legst dich fest! Wenn du nicht weiterkommst, hol dir gestufte <b>Tipps</b> vom Gesellen. Dein <b>📜 Gesellenbrief</b> (oben rechts) sammelt alle Merksätze und deine geschliffenen Linsen – am Ende stehen dort drei <b>Lückensätze fürs Heft</b>. Wer die Meisterprüfung schafft, darf ins <b>⭐ Meister-Extra</b>. <i>(Bedienung: mit einem Finger drehen, zwei Fingern zoomen und verschieben, Doppeltipp setzt die Ansicht zurück. Über die Ansichts-Knöpfe schaust du frontal in den Strahl oder von oben, und mit „📐 Winkel“ blendest du Lot und Winkel eines Strahls ein.)</i>",
+ q: "<b>Sammellinse in 3D – die geführte Tour.</b> Klick dich in <b>acht Schritten</b> durch die Entstehung der Sammellinse: von den vielen Linsen im <b>Alltag</b> über ihre <b>Form</b>, den Rückblick zur <b>Brechung am Prisma</b> und den <b>Prismen-Turm</b>, bis der Stapel <b>rund geschliffen</b> zur Linse wird. Dann findest du <b>Brennpunkt und Brennweite</b> und stellst an der <b>optischen Bank</b> ein scharfes Bild auf dem Schirm ein. Geh mit „Weiter“ bis zum <b>letzten Schritt</b> – auf einigen Stationen kannst du an <b>Reglern</b> ziehen und selbst ausprobieren. Danach prüfst du hier deine Antwort. <i>(Bedienung: mit einem Finger drehen, mit zwei Fingern zoomen und verschieben, Doppeltipp setzt die Ansicht zurück. Über die Ansichts-Knöpfe schaust du von der Seite, in 3D oder von oben.)</i>",
  expl: "<b>Vom Prisma zur Linse:</b> Ein Prisma lenkt Licht immer zur Basis hin ab – je größer der Keilwinkel, desto stärker der Knick. Stapelt man Prismen so, dass der Keilwinkel nach außen hin wächst, treffen sich alle Strahlen in einem Punkt. Lässt man diesen Stapel um die optische Achse rotieren und schleift die Stufen glatt, entsteht die <b>Sammellinse</b>: außen stark geneigte Flächen (starke Brechung), zur Mitte hin immer flacher. Deshalb gilt auch: <b>je stärker die Flächen gekrümmt sind, desto kürzer die Brennweite</b>.<br><b>Und umgekehrt:</b> Dreht man die Prismen um (dicke Basis <i>außen</i>), läuft das Licht auseinander. Die Rückverlängerungen der Strahlen treffen sich in einem <b>virtuellen Brennpunkt</b> vor der Linse – das ist eine <b>Streulinse</b> mit <b>negativer Brennweite</b>. Genau die braucht ein kurzsichtiges Auge (mehr dazu im Kapitel Auge &amp; Fehlsichtigkeit).<br>🛑 Eine Linse wirkt wie ein rotierter Prismenstapel – es zählt nur die Neigung der Oberfläche (Fresnel-Linse!).",
  tier2: {
   q: "Warum muss die Linsenoberfläche außen stärker geneigt sein als in der Mitte?",
@@ -4431,7 +4434,7 @@ let pruefCount = 10;                // gewählte Fragenzahl (5/10/15)
 const PRUEF_EXCLUDE_TYPES = ['spiegellabyrinth', 'linsenbau']; // im Prüfungsmodus nicht zulassen
 
 const INTER_TYPES = ['winkel', 'spiegelort', 'strahlengang', 'schirm', 'spiegelblick', 'spiegellabyrinth', 'lupe', 'auge', 'linsenbau', 'peilung', 'schirmjagd', 'lupenauge'];
-const INTER_LABEL = { winkel: 'Interaktiv · Winkel', spiegelort: 'Interaktiv · Bildort', strahlengang: 'Interaktiv · Konstruktion', schirm: 'Interaktiv · Schirm', spiegelblick: 'Interaktiv · Sehstrahl', spiegellabyrinth: 'Interaktiv · Spiegellabyrinth', lupe: 'Interaktiv · Lupe', auge: 'Interaktiv · Auge', linsenbau: 'Interaktiv · 3D-Werkstatt', peilung: 'Interaktiv · Peilung', schirmjagd: 'Interaktiv · Bildjagd', lupenauge: 'Interaktiv · Auge + Lupe' };
+const INTER_LABEL = { winkel: 'Interaktiv · Winkel', spiegelort: 'Interaktiv · Bildort', strahlengang: 'Interaktiv · Konstruktion', schirm: 'Interaktiv · Schirm', spiegelblick: 'Interaktiv · Sehstrahl', spiegellabyrinth: 'Interaktiv · Spiegellabyrinth', lupe: 'Interaktiv · Lupe', auge: 'Interaktiv · Auge', linsenbau: 'Interaktiv · 3D-Hinführung', peilung: 'Interaktiv · Peilung', schirmjagd: 'Interaktiv · Bildjagd', lupenauge: 'Interaktiv · Auge + Lupe' };
 
 // MathJax gibt es nicht mehr, die Aufrufe bleiben als No-op erhalten.
 function typeset(){}
@@ -6200,7 +6203,7 @@ showStart();
 
 <script>
 /* =====================================================================
-   3D-Linsenwerkstatt (Aufgabe E12, Typ 'linsenbau').
+   3D-Hinführung zur Sammellinse (Aufgabe E12, Typ 'linsenbau').
    Die komplette Simulation (inkl. three.js) liegt als eigene Datei
    sim_linsenbau.html daneben (rund 1 MB inkl. three.js) und wird in einem
    neuen Tab geöffnet, damit die Aufgabenseite selbst klein und schnell bleibt
@@ -6251,9 +6254,9 @@ showStart();
     if (d.type === 'ready') {
       const st = (inst && inst.getState) ? inst.getState() : null;
       simWin.postMessage({ source: 'linsenbau-host', type: 'init', qid: currentQid,
-        solved: !!(st && st.solved), progress: st ? st.progress : {} }, '*');
+        solved: !!(st && st.solved), seen: st ? st.seen : 0, total: st ? st.total : 0 }, '*');
     } else if (d.type === 'progress') {
-      if (inst && inst.setProgress) inst.setProgress(d.level);
+      if (inst && inst.setProgress) inst.setProgress(d.seen, d.total);
     } else if (d.type === 'success') {
       if (inst && inst.setSolved) inst.setSolved();
     } else if (d.type === 'close') {

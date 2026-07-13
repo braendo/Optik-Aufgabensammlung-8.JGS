@@ -76,7 +76,7 @@ Neben klassischen **Single- und Multiple-Choice-Fragen** gibt es zahlreiche **in
 | `peilung` / `vergleich` / `zuordnen` | Peilen, vergleichen, Begriffe zuordnen |
 | `lupe` / `lupenauge` / `auge` | Lupe und Auge/Fehlsichtigkeit untersuchen |
 | `fehlersuche` | Fehler in einer Aussage oder Skizze finden |
-| `linsenbau` | Die 3D-Linsenwerkstatt (Aufgabe E12, siehe unten) |
+| `linsenbau` | Die 3D-Hinführung zur Sammellinse (Aufgabe E12, siehe unten) |
 
 Jede interaktive Aufgabe meldet ihren Fortschritt an die Aufgabenkarte zurück (Prüf-Button, Bewertung).
 
@@ -91,9 +91,9 @@ Alle Simulationen sind **eigenständige Seiten**, die sich per Klick auf den jew
 | `sim_sammellinse.html` | **Sammellinse** – virtuelle optische Bank, Bildkonstruktion, Erkunden, Vorhersagen, „Jetzt du!" | Sammellinse |
 | `sim_brechung.html` | **Brechung** – freier Experimentier-Aufbau + Vorhersagen | Brechung, Totalreflexion & Lichtleiter, Vermischte Aufgaben |
 | `sim_totalreflexion.html` | **Taucherblick & Snellius-Fenster** – Totalreflexion, Grenzwinkel, scheinbare Sonne/Fisch | Totalreflexion & Lichtleiter |
-| `sim_linsenbau.html` | **3D-Linsenwerkstatt** (Aufgabe E12) – Linsen schleifen in 3D (three.js), sechs Aufträge | Sammellinse (bzw. Start-Button der Aufgabe E12) |
+| `sim_linsenbau.html` | **3D-Hinführung zur Sammellinse** (Aufgabe E12) – geführte 8-Schritt-Tour in 3D (three.js): vom Prisma zur Linse, Brennpunkt & Brennweite, Bild auf dem Schirm | Sammellinse (bzw. Start-Button der Aufgabe E12) |
 
-**Besonderheit 3D-Linsenwerkstatt:** Sie meldet ihren Fortschritt und den Erfolg über eine Fenster-Verbindung an die Aufgabe zurück. Wer alle sechs Aufträge löst, bekommt die Aufgabe E12 automatisch als *gelöst* markiert – auch wenn die Werkstatt in einem eigenen Tab läuft.
+**Besonderheit 3D-Hinführung:** Sie meldet ihren Fortschritt und den Abschluss über eine Fenster-Verbindung an die Aufgabe zurück. Wer die Tour bis zum letzten Schritt durchläuft, bekommt die Aufgabe E12 automatisch als *gelöst* markiert – auch wenn die Hinführung in einem eigenen Tab läuft.
 
 ---
 
@@ -111,7 +111,7 @@ Die Umgebung ist für iPads gebaut, ein paar Punkte helfen im Klassensatz:
 ## Technischer Aufbau
 
 - **Reines HTML/CSS/JavaScript**, kein Build-Schritt, keine Abhängigkeiten aus dem Netz.
-- **three.js** (für die 3D-Werkstatt) ist **direkt in `sim_linsenbau.html` eingebettet** – kein CDN, damit auch offline alles läuft.
+- **three.js** (für die 3D-Hinführung) ist **direkt in `sim_linsenbau.html` eingebettet** – kein CDN, damit auch offline alles läuft.
 - **Kein Backend, keine Datenbank.** Der Lern-Fortschritt lebt im Browser während der Sitzung; die Themen-/Farbwahl wird lokal gespeichert (`localStorage`). Es werden **keine Daten an einen Server gesendet**.
 - Die Simulationen werden über **relative Pfade** geladen und laufen deshalb identisch offline (gleicher Ordner) wie auf GitHub Pages.
 
@@ -123,7 +123,7 @@ Optik/
 ├── sim_sammellinse.html       → Simulation: Sammellinse
 ├── sim_brechung.html          → Simulation: Brechung
 ├── sim_totalreflexion.html    → Simulation: Taucherblick & Snellius-Fenster
-├── sim_linsenbau.html         → 3D-Linsenwerkstatt (three.js eingebettet, ~1 MB)
+├── sim_linsenbau.html         → 3D-Hinführung Sammellinse (three.js eingebettet, ~1 MB)
 └── README.md                  → diese Datei
 ```
 
