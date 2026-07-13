@@ -777,7 +777,6 @@ function simGoBack(){
         ctx.lineTo(width, seabedY);
         ctx.stroke();
         ctx.restore();
-        drawSeaPlant(ctx, width * 0.07, seabedY, height * 0.22, palette, 0.50);
 
         drawParallelSunGuides(ctx, surface, airDirection, width, height, palette);
 
@@ -942,41 +941,6 @@ function simGoBack(){
         return { x: cx + Math.cos(az) * rho, y: cy + Math.sin(az) * rho };
       }
 
-      function drawSeaPlant(ctx, x, y, height, palette, alpha) {
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = palette.plant;
-        ctx.lineJoin = 'round';
-        // Büschel aus mehreren schlanken, sich zur Spitze verjüngenden Halmen
-        var blades = [
-          { ang: -0.60, len: 0.70, w: 0.045, bend: -0.30 },
-          { ang: -0.32, len: 0.90, w: 0.055, bend: -0.16 },
-          { ang: -0.06, len: 1.05, w: 0.060, bend: 0.05 },
-          { ang: 0.22, len: 0.95, w: 0.055, bend: 0.20 },
-          { ang: 0.52, len: 0.72, w: 0.048, bend: 0.34 }
-        ];
-        blades.forEach(function (b) {
-          var len = height * b.len;
-          var w = height * b.w;
-          var dirX = Math.sin(b.ang);
-          var dirY = -Math.cos(b.ang);
-          var perpX = Math.cos(b.ang);
-          var perpY = Math.sin(b.ang);
-          var bend = b.bend * height * 0.4;
-          var tipX = x + dirX * len + bend;
-          var tipY = y + dirY * len;
-          var midX = x + dirX * len * 0.5 + bend * 0.55;
-          var midY = y + dirY * len * 0.5;
-          ctx.beginPath();
-          ctx.moveTo(x - perpX * w, y - perpY * w);
-          ctx.quadraticCurveTo(midX - perpX * w * 0.5, midY - perpY * w * 0.5, tipX, tipY);
-          ctx.quadraticCurveTo(midX + perpX * w * 0.5, midY + perpY * w * 0.5, x + perpX * w, y + perpY * w);
-          ctx.closePath();
-          ctx.fill();
-        });
-        ctx.restore();
-      }
-
       function drawWindowView() {
         var prepared = prepareCanvas(windowCanvas);
         var ctx = prepared.ctx;
@@ -1003,7 +967,6 @@ function simGoBack(){
         drawFish(ctx, reflectedFishA.x, reflectedFishA.y, Math.max(8, width * 0.033), -1, palette, 0.62, reflectedFishA.rotation);
         drawFish(ctx, reflectedFishB.x, reflectedFishB.y, Math.max(7, width * 0.027), 1, palette, 0.56, reflectedFishB.rotation);
         drawFish(ctx, reflectedFishC.x, reflectedFishC.y, Math.max(8, width * 0.03), -1, palette, 0.58, reflectedFishC.rotation);
-        drawSeaPlant(ctx, width * 0.10, height * 0.94, height * 0.22, palette, 0.56);
 
         var path = windowPath(cx, cy, radius);
         ctx.save();
