@@ -29,7 +29,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 /* Schritt-Karte */
 #mission{position:absolute;top:10px;left:10px;max-width:min(460px,62vw);background:rgba(10,22,34,.94);border:1px solid #1e3a5f;
   border-radius:12px;padding:12px 14px;pointer-events:none}
-#mission .mh{font-size:14px;font-weight:800;color:#ffd24a;margin-bottom:5px}
+#mission.hidden{display:none}
+#mission .mh{font-size:14px;font-weight:800;color:#ffd24a;margin-bottom:5px;padding-right:34px}
+/* Ausblenden-Knopf (oben rechts in der Schritt-Karte) + Wiedereinblenden-Pille */
+.mhide{position:absolute;top:6px;right:6px;width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:1;color:#8aafc2;background:rgba(17,34,54,.92);border:1px solid #1e3a5f;border-radius:8px;
+  cursor:pointer;-webkit-appearance:none;pointer-events:auto}
+.mhide:active{background:#1e4d7a;color:#fff;border-color:#3a7abf}
+#missionShow{position:absolute;top:10px;left:10px;z-index:22;display:none;align-items:center;gap:6px;
+  padding:9px 13px;font-size:13px;font-weight:800;color:#8aafc2;background:rgba(17,34,54,.92);border:2px solid #1e3a5f;
+  border-radius:9px;cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+#missionShow:active{background:#1e4d7a;color:#fff;border-color:#3a7abf}
+#mission.hidden ~ #missionShow{display:inline-flex}
 #mission .mt{font-size:14px;line-height:1.5;color:#e8f4f8}
 #mission .mt b{color:#7ec8e3}
 #mission .mp{font-size:13px;font-weight:700;color:#7ec8e3;margin-top:7px}
@@ -122,6 +133,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
     <canvas id="c3d"></canvas>
     <div id="status"></div>
     <div id="mission"></div>
+    <button id="missionShow" type="button">&#128065;&#65039; Text einblenden</button>
     <div id="camBtns">
       <button class="cam-b" id="camSide" type="button">Seite</button>
       <button class="cam-b" id="cam3d" type="button">3D</button>
@@ -227,6 +239,7 @@ function resetView(){ tweenCam(stepView()); markCam(''); }
 byId('camSide').addEventListener('click', function(){ tweenCam(viewWith(0, 0.08)); markCam('camSide'); });
 byId('cam3d').addEventListener('click', function(){ tweenCam(viewWith(-0.5, 0.32)); markCam('cam3d'); });
 byId('camTop').addEventListener('click', function(){ tweenCam(viewWith(0, 1.42)); markCam('camTop'); });
+byId('missionShow').addEventListener('click', function(){ byId('mission').classList.remove('hidden'); });
 function panBy(dxPx, dyPx){
   var k = 2 * cam.dist * Math.tan(camera.fov * Math.PI / 360) / (sizeH || 600);
   var st = Math.sin(cam.theta), ct = Math.cos(cam.theta);
@@ -315,7 +328,7 @@ function makeLabelSprite(w){
 
 /* Strahlen-Pool: duenne Zylinder-Segmente statt 1px-GL-Linien,
    sonst sind die Strahlen am Beamer nicht erkennbar */
-var MAX_RAYS = 26, RAY_SEGS = 3;
+var MAX_RAYS = 64, RAY_SEGS = 3;
 var rayGroup = new THREE.Group();
 scene.add(rayGroup);
 var RAY_GEO = new THREE.CylinderGeometry(0.045, 0.045, 1, 6, 1, true);
@@ -336,9 +349,10 @@ var rayUp = new THREE.Vector3(0, 1, 0), rayDir = new THREE.Vector3();
     rayPool.push(grp);
   }
 })();
-function setRay(i, pts, opacity){
+function setRay(i, pts, opacity, color){
   var grp = rayPool[i];
   grp.userData.mat.opacity = opacity === undefined ? 0.9 : opacity;
+  grp.userData.mat.color.set(color === undefined ? 0xffd24a : color);
   for (var s = 0; s < RAY_SEGS; s++) {
     var seg = grp.children[s];
     if (s < pts.length - 1) {
@@ -940,6 +954,7 @@ var STEPS = [
   build: function(){
     lv.xp = 1.0;
     lv.found = false;
+    lv.axis2 = false;
     stepGroup.add(makeLens3(AP));
     var sun = textSprite('Parallellicht (Sonne)', '#8aafc2', 4.6);
     sun.position.set(X_SRC + 1.4, 2.9, 0);
@@ -1019,7 +1034,19 @@ var STEPS = [
       pts.push(new THREE.Vector3(xp, yAt, 0));
       setRay(i, pts);
     }
-    hideRaysFrom(RAYS.length);
+    var nr = RAYS.length;
+    /* Zweite Achse (x-z-Ebene): dasselbe Parallelbuendel um 90 Grad gedreht,
+       laeuft ebenfalls durch F -> zeigt, dass die Linse rundum buendelt. */
+    if (lv.axis2) {
+      for (var j = 0; j < RAYS.length; j++) {
+        var z0 = RAYS[j];
+        var dz = (0 - z0) / F_LENS;
+        setRay(nr + j, [new THREE.Vector3(X_SRC, 0, z0), new THREE.Vector3(0, 0, z0),
+          new THREE.Vector3(xp, 0, z0 + dz * xp)]);
+      }
+      nr += RAYS.length;
+    }
+    hideRaysFrom(nr);
     var r = Math.max(0.03, AP * Math.abs(1 - xp / F_LENS));
     lv.spot.scale.set(r, r, 1);
     var near = 1 - clamp(r / AP, 0, 1);
@@ -1038,16 +1065,34 @@ var STEPS = [
       function(v){ lv.xp = v; self.update(); },
       function(v){ return fmt(v, 1) + ' cm'; });
     lv.ro = mkReadout('Fleck');
+    lv.btnAxis2 = mkButton('2. Achse', function(){
+      lv.axis2 = !lv.axis2;
+      lv.btnAxis2.className = 'cbtn' + (lv.axis2 ? ' on' : '');
+      self.update();
+    });
     self.update();
   }
 },
 { chip: '7 Bank',
   h: 'Schritt 7 von 8: Die optische Bank',
-  t: 'Der Versuch aus der Stunde, jetzt in 3D: Kerze (<b>G</b>), Linse (f = 3 cm), Schirm. Die Kerze steht bei <b>g = 7 cm</b>. Schiebe den <b>Schirm</b>, bis das Bild scharf ist, und vergleiche b mit deiner Messung. R&uuml;cke dann die Kerze auf <b>g = 6</b> und <b>g = 4</b>: wie in deiner Messreihe.',
-  p: 'Schirm und Kerze kannst du direkt ziehen. Der Knopf Lichtkegel zeigt den Weg des Lichts.',
+  t: 'Der Versuch aus der Stunde, jetzt in 3D: Kerze (<b>G</b>), Linse (f = 3 cm), Schirm. Schiebe den <b>Schirm</b>, bis das Bild scharf ist. Schalte die <b>Punkte</b> (Basis, Mitte, Flamme) zu: <b>Jeder</b> sendet ein B&uuml;ndel durch die <b>ganze</b> Linse. Basis (blau), Mitte (gr&uuml;n) und Flamme (gelb) werden Punkt f&uuml;r Punkt abgebildet &ndash; &uuml;ber Kreuz, darum steht das Bild <b>Kopf</b>. R&uuml;cke die Kerze auf g = 6 und g = 4. Schiebe sie schlie&szlig;lich <b>ganz nah</b> (g &lt; f = 3): Der Schirm bleibt <b>leer</b> &ndash; jetzt entsteht ein <b>virtuelles</b>, aufrechtes, vergr&ouml;&szlig;ertes Bild wie bei der <b>Lupe</b>.',
+  p: 'Kerze/Schirm direkt ziehen. Punkte einzeln zuschalten. <b>Hauptstrahlen</b>: die drei Konstruktionsstrahlen. <b>2. Achse</b>: B&uuml;ndel in 3D. <b>Halbe Linse</b>: abdecken.',
   view: { theta: 0, phi: 0.14, dist: 22, tx: 1, ty: -0.3, tz: 0 },
   build: function(){
-    lv.g = 7; lv.s = 9; lv.cone = false; lv.sharpToast = false;
+    lv.g = 7; lv.s = 9; lv.sharpToast = false; lv.virtToast = false;
+    lv.halfLens = false; lv.halfToast = false;
+    lv.ptOn = [false, false, false];   /* Buendel je Objektpunkt einzeln: Basis / Mitte / Flamme */
+    lv.axis2 = false;                  /* zweite Achse (x-z-Ebene) */
+    lv.mainRays = false;               /* Hauptstrahlen-Modus: 3 Konstruktionsstrahlen statt Buendel */
+    /* Objektpunkte der Kerze (Hoehe ueber der optischen Achse) mit fester Farbe:
+       Basis (blau, auf der Achse), Mitte (gruen), Flammenspitze (gelb).
+       Der zugehoerige Bildpunkt liegt bei -y*m (umgekehrt) -> die Farben laufen
+       hinter der Linse ueber Kreuz, das macht die Bildumkehrung sichtbar. */
+    lv.pts = [
+      { y: 0.0,  c: 0x7ec8e3 },
+      { y: 1.15, c: 0x37d67a },
+      { y: 2.3,  c: 0xffd24a }
+    ];
     var rail = new THREE.Mesh(new THREE.BoxGeometry(26, 0.4, 1.6), MAT_RAIL);
     rail.position.set(1.5, -2.5, 0);
     stepGroup.add(rail);
@@ -1089,6 +1134,18 @@ var STEPS = [
     lv.candleHit.position.y = -0.2;
     lv.candleHit.userData.drag = 'candle';
     lv.candle.add(lv.candleHit);
+    /* Objektpunkte als kleine farbige Kugeln auf der Kerze (depthTest aus -> immer
+       sichtbar); sie sitzen am Ursprung der jeweiligen Lichtbuendel und wandern mit */
+    lv.objDots = [];
+    for (var pi = 0; pi < lv.pts.length; pi++) {
+      var odm = new THREE.MeshBasicMaterial({ color: lv.pts[pi].c, depthTest: false, transparent: true });
+      odm.userData.own = true;
+      var od = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), odm);
+      od.position.set(0, lv.pts[pi].y, 0);
+      od.renderOrder = 5;
+      lv.candle.add(od);
+      lv.objDots.push(od);
+    }
     /* Schirm */
     lv.screen = new THREE.Group();
     var sStem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.0, 10), MAT_METAL);
@@ -1129,76 +1186,274 @@ var STEPS = [
     stepGroup.add(lv.bDim);
     lv.dragTargets = [lv.candleHit];
     lv.screen.traverse(function(o){ if (o.userData.drag) lv.dragTargets.push(o); });
+    /* Bildpunkte: farbige Kugeln am Bildort x = b. Sie bauen das Bild Punkt fuer
+       Punkt auf; bei scharfem Bild (s = b) liegen sie genau auf dem Schirm. */
+    lv.imgDotsGroup = new THREE.Group();
+    lv.imgDots = [];
+    for (var qi = 0; qi < lv.pts.length; qi++) {
+      var idm = new THREE.MeshBasicMaterial({ color: lv.pts[qi].c, depthTest: false, transparent: true });
+      idm.userData.own = true;
+      var idd = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), idm);
+      idd.renderOrder = 5;
+      lv.imgDotsGroup.add(idd);
+      idd.visible = false;
+      lv.imgDots.push(idd);
+    }
+    lv.imgDotsGroup.visible = true;
+    stepGroup.add(lv.imgDotsGroup);
+    /* Abdeckung der UNTEREN Linsenhaelfte: eine Blende MIT TIEFE (Kasten), damit sie
+       auch in der Seitenansicht sichtbar ist. Bewusst die untere Haelfte (y<0): alle
+       gezeichneten Strahlen (Hauptstrahl + obere Randstrahlen) liegen bei y>=0 und
+       kreuzen die Blende daher nicht. Kein Ziehobjekt. */
+    lv.cover = new THREE.Group();
+    var coverM = new THREE.MeshPhongMaterial({ color: 0x243444, shininess: 30 });
+    coverM.userData.own = true;
+    var coverBlade = new THREE.Mesh(new THREE.BoxGeometry(0.34, AP + 0.25, 2 * AP + 0.5), coverM);
+    coverBlade.position.set(-0.66, -(AP + 0.25) / 2 - 0.04, 0);
+    lv.cover.add(coverBlade);
+    var coverEdge = new THREE.LineSegments(new THREE.EdgesGeometry(coverBlade.geometry), MAT_EDGE);
+    coverEdge.position.copy(coverBlade.position);
+    lv.cover.add(coverEdge);
+    lv.cover.visible = false;
+    stepGroup.add(lv.cover);
+    /* Virtuelles Bild (Lupenfall g<f): aufrechtes, vergroessertes, halbtransparentes
+       Kerzenbild auf der Objektseite (x = b < 0). candleTex ist kopfueber gerendert,
+       daher scale.y negativ -> wieder aufrecht. */
+    lv.vimgMat = new THREE.MeshBasicMaterial({ map: candleTex[0], transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    lv.vimgMat.userData.own = true;
+    lv.vimg = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), lv.vimgMat);
+    lv.vimg.rotation.y = -Math.PI / 2;
+    lv.vimg.visible = false;
+    stepGroup.add(lv.vimg);
+    lv.vlabel = textSprite('B virtuell', '#7ec8e3', 3.4);
+    lv.vlabel.visible = false;
+    stepGroup.add(lv.vlabel);
     this.update();
   },
   update: function(){
     var g = lv.g, s = lv.s;
-    var b = 1 / (1 / F_LENS - 1 / g);
+    var b = 1 / (1 / F_LENS - 1 / g);   /* g>f: b>0 reell | g<f: b<0 virtuell */
     var m = b / g;
     lv.candle.position.x = -g;
     lv.screen.position.x = s;
-    var db = Math.abs(s - b);
-    var blurR = AP * db / b;          /* Radius des Unschaerfe-Kreises am Schirm */
-    var blurN = clamp(blurR / 1.6, 0, 1);
-    var sharp = db <= 0.3;
-    var sc = 1 + blurN * 1.1;
-    lv.img.scale.set(1.15 * m * sc, 2.35 * m * sc, 1);
-    lv.img.position.y = -1.15 * m;
-    lv.imgMat.map = candleTex[Math.round(blurN * 4)];
-    lv.imgMat.opacity = 1 - 0.5 * blurN;
-    lv.imgMat.needsUpdate = true;
+    var col, ri = 0;
+    var RR = AP * 0.92, YS = [-0.9, -0.35, 0.35, 0.9], ZS = [-0.9, 0.9];
+    var anyOn = lv.ptOn[0] || lv.ptOn[1] || lv.ptOn[2];
     lv.gDim.position.x = -g / 2;
     lv.gDim.userData.setText('g = ' + fmt(g, 1) + ' cm', '#7ec8e3');
-    lv.bDim.position.x = s / 2;
-    lv.bDim.userData.setText((sharp ? 'b = ' : 'Schirm bei ') + fmt(s, 1) + ' cm', sharp ? '#37d67a' : '#ffe9a8');
-    var sizeW = m < 0.95 ? 'verkleinert' : (m > 1.05 ? 'vergrößert' : 'gleich groß');
-    if (sharp) {
-      setStatus('ok', 'Scharf: reell, umgekehrt, ' + sizeW);
-      if (!lv.sharpToast) {
-        lv.sharpToast = true;
-        showToast('Scharf', 'Bei g = ' + fmt(g, 1) + ' cm liegt das scharfe Bild bei b = ' +
-          fmt(b, Math.round(b * 100) % 10 === 0 ? 1 : 2) +
-          ' cm. Vergleiche mit deiner Messtabelle. Je näher die Kerze an der Linse (aber g &gt; f), desto größer werden b und das Bild.');
+    var mode = (g > F_LENS + 0.12) ? 'real' : (g < F_LENS - 0.12 ? 'virtual' : 'infinity');
+
+    if (mode === 'real') {
+      /* ===== g > f: reelles, umgekehrtes Bild auf dem Schirm ===== */
+      var db = Math.abs(s - b);
+      var blurN = clamp(AP * db / b / 1.6, 0, 1);
+      var sharp = db <= 0.3;
+      var sc = 1 + blurN * 1.1;
+      lv.img.visible = true;
+      lv.img.scale.set(1.15 * m * sc, 2.35 * m * sc, 1);
+      lv.img.position.y = -1.15 * m;
+      lv.imgMat.map = candleTex[Math.round(blurN * 4)];
+      var imgOp = 1 - 0.5 * blurN;
+      if (anyOn) imgOp *= 0.5;
+      if (lv.halfLens) imgOp *= 0.5;
+      lv.imgMat.opacity = imgOp;
+      lv.imgMat.needsUpdate = true;
+      lv.vimg.visible = false; lv.vlabel.visible = false;
+      lv.imgDotsGroup.position.x = b;
+      for (var di = 0; di < lv.imgDots.length; di++) {
+        lv.imgDots[di].position.y = -lv.pts[di].y * m;   /* umgekehrt */
+        lv.imgDots[di].material.opacity = lv.halfLens ? 0.5 : 1;
+        lv.imgDots[di].visible = lv.ptOn[di] && b <= 13.6;
       }
-    } else if (b > 13.5) {
-      setStatus('no', 'Bild außerhalb der Bank: Kerze weiter weg schieben');
-    } else {
-      setStatus('no', 'Unscharf: Schirm verschieben');
-    }
-    /* Lichtkegel: Flammenspitze, Linsenrand, Bildpunkt */
-    if (lv.cone) {
-      var K = 10;
-      var tipY = H_OBJ, imgY = -H_OBJ * m;
-      for (var k = 0; k < K; k++) {
-        var ph = k / K * Math.PI * 2;
-        var ry = AP * 0.92 * Math.cos(ph), rz = AP * 0.92 * Math.sin(ph);
-        var pts = [new THREE.Vector3(-g, tipY, 0), new THREE.Vector3(0, ry, rz)];
-        if (s >= b) {
-          pts.push(new THREE.Vector3(b, imgY, 0));
-          if (s > b + 0.05) {
-            var u2 = (s - b) / b;
-            pts.push(new THREE.Vector3(s, imgY + (imgY - ry) * u2, -rz * u2));
-          }
-        } else {
-          var u1 = s / b;
-          pts.push(new THREE.Vector3(s, ry + (imgY - ry) * u1, rz + (0 - rz) * u1));
+      lv.bDim.position.x = s / 2;
+      lv.bDim.userData.setText((sharp ? 'b = ' : 'Schirm bei ') + fmt(s, 1) + ' cm', sharp ? '#37d67a' : '#ffe9a8');
+      var sizeW = m < 0.95 ? 'verkleinert' : (m > 1.05 ? 'vergrößert' : 'gleich groß');
+      if (sharp) {
+        setStatus('ok', 'Scharf: reell, umgekehrt, ' + sizeW + (lv.halfLens ? ' — halbe Linse: nur dunkler' : ''));
+        if (!lv.sharpToast) {
+          lv.sharpToast = true;
+          showToast('Scharf', 'Bei g = ' + fmt(g, 1) + ' cm liegt das scharfe Bild bei b = ' +
+            fmt(b, Math.round(b * 100) % 10 === 0 ? 1 : 2) +
+            ' cm. Vergleiche mit deiner Messtabelle. Je näher die Kerze an der Linse (aber g &gt; f), desto größer werden b und das Bild.');
         }
-        setRay(k, pts, 0.5);
+      } else if (b > 13.5) {
+        setStatus('no', 'Bild außerhalb der Bank: Kerze weiter weg schieben');
+      } else {
+        setStatus('no', 'Unscharf: Schirm verschieben');
       }
-      hideRaysFrom(K);
-    } else hideRaysFrom(0);
+      if (lv.mainRays) {
+        /* Punkt 5: die drei HAUPTSTRAHLEN (Konstruktion) je gewaehltem Objektpunkt,
+           Farbkonvention wie in der 2D-Sim: Parallelstrahl blau, Mittelpunktstrahl
+           gruen, Brennpunktstrahl orange. Reine 2D-Konstruktion in der z=0-Ebene;
+           Halbe Linse / 2. Achse wirken hier nicht. Alle drei kreuzen sich im Bildpunkt. */
+        for (var pm = 0; pm < lv.pts.length; pm++) {
+          if (!lv.ptOn[pm]) continue;
+          var yO = lv.pts[pm].y, yI = -yO * m;
+          /* Parallelstrahl: waagerecht zur Linse, dann durch den hinteren Brennpunkt */
+          setRay(ri++, [new THREE.Vector3(-g, yO, 0), new THREE.Vector3(0, yO, 0),
+            new THREE.Vector3(s, yO + (yI - yO) * s / b, 0)], 0.9, 0x2b9be0);
+          /* Mittelpunktstrahl: gerade durch die Linsenmitte */
+          setRay(ri++, [new THREE.Vector3(-g, yO, 0), new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(s, -yO * s / g, 0)], 0.9, 0x37d67a);
+          /* Brennpunktstrahl: durch den vorderen Brennpunkt, dann waagerecht */
+          setRay(ri++, [new THREE.Vector3(-g, yO, 0), new THREE.Vector3(0, yI, 0),
+            new THREE.Vector3(s, yI, 0)], 0.9, 0xe08a3c);
+        }
+        hideRaysFrom(ri);
+      } else {
+        var nRim = YS.length + (lv.axis2 ? ZS.length : 0);
+        for (var pi = 0; pi < lv.pts.length; pi++) {
+          if (!lv.ptOn[pi]) continue;
+          var yObj = lv.pts[pi].y; col = lv.pts[pi].c;
+          var yImg = -yObj * m;
+          /* Mittelpunktstrahl */
+          setRay(ri++, [new THREE.Vector3(-g, yObj, 0), new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(s, -yObj * s / g, 0)], 0.75, col);
+          for (var q = 0; q < nRim; q++) {
+            var ry = q < YS.length ? RR * YS[q] : 0;               /* y-Randstrahlen */
+            var rz = q < YS.length ? 0 : RR * ZS[q - YS.length];   /* z-Randstrahlen (2. Achse) */
+            if (lv.halfLens && ry < 0) continue;   /* untere Haelfte abgedeckt */
+            var pts = [new THREE.Vector3(-g, yObj, 0), new THREE.Vector3(0, ry, rz)];
+            if (s >= b) {
+              pts.push(new THREE.Vector3(b, yImg, 0));
+              if (s > b + 0.05) {
+                var u2 = (s - b) / b;
+                pts.push(new THREE.Vector3(s, yImg + (yImg - ry) * u2, -rz * u2));
+              }
+            } else {
+              var u1 = s / b;
+              pts.push(new THREE.Vector3(s, ry + (yImg - ry) * u1, rz + (0 - rz) * u1));
+            }
+            setRay(ri++, pts, 0.5, col);
+          }
+        }
+        hideRaysFrom(ri);
+      }
+
+    } else if (mode === 'virtual') {
+      /* ===== g < f (Lupe): kein Schirmbild; aufrechtes, vergroessertes virtuelles
+         Bild auf der Objektseite bei x = b < 0. Die Strahlen laufen hinter der Linse
+         auseinander; ihre schwachen Rueckwaerts-Verlaengerungen treffen sich dort. ===== */
+      var bVis = Math.max(b, -12);          /* b ist negativ; Anzeige nicht weiter als -12 */
+      var mAbs = clamp(-b / g, 1, 3.5);     /* Vergroesserung, fuer die Darstellung begrenzt */
+      lv.img.visible = false;
+      lv.vimg.visible = true;
+      lv.vimg.position.x = bVis;
+      lv.vimg.scale.set(1.15 * mAbs, -2.35 * mAbs, 1);   /* -y: Textur wieder aufrecht */
+      lv.vimg.position.y = 1.15 * mAbs;
+      lv.vimgMat.opacity = lv.halfLens ? 0.28 : 0.55;
+      lv.vlabel.visible = true;
+      lv.vlabel.position.set(bVis, 2.35 * mAbs + 0.55, 0);
+      lv.imgDotsGroup.position.x = bVis;
+      for (var dj = 0; dj < lv.imgDots.length; dj++) {
+        lv.imgDots[dj].position.y = lv.pts[dj].y * mAbs;   /* aufrecht */
+        lv.imgDots[dj].material.opacity = lv.halfLens ? 0.5 : 1;
+        lv.imgDots[dj].visible = lv.ptOn[dj];
+      }
+      lv.bDim.position.x = bVis;
+      lv.bDim.userData.setText('virtuell · ' + fmt(mAbs, 1) + '×', '#7ec8e3');
+      setStatus('no', 'Virtuell: aufrecht, vergrößert (Lupe) — der Schirm bleibt leer' + (lv.halfLens ? ' — halbe Linse: nur dunkler' : ''));
+      if (anyOn && !lv.virtToast) {
+        lv.virtToast = true;
+        showToast('Lupe: virtuelles Bild', 'g &lt; f: Die Strahlen laufen hinter der Linse <b>auseinander</b> und treffen sich nie auf einem Schirm. Ihre <b>gedachten Verl&auml;ngerungen</b> (schwach) treffen sich vor der Linse zu einem <b>aufrechten, vergr&ouml;&szlig;erten virtuellen</b> Bild. Genau das siehst du durch eine <b>Lupe</b>.');
+      }
+      var XE = 7, nRimV = YS.length + (lv.axis2 ? ZS.length : 0);
+      for (var pv = 0; pv < lv.pts.length; pv++) {
+        if (!lv.ptOn[pv]) continue;
+        var yO = lv.pts[pv].y; col = lv.pts[pv].c;
+        var yV = yO * mAbs;                 /* aufrechte virtuelle Bildhoehe */
+        setRay(ri++, [new THREE.Vector3(-g, yO, 0), new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(XE, -yO * XE / g, 0)], 0.7, col);
+        for (var qv = 0; qv < nRimV; qv++) {
+          var ry2 = qv < YS.length ? RR * YS[qv] : 0;
+          var rz2 = qv < YS.length ? 0 : RR * ZS[qv - YS.length];
+          if (lv.halfLens && ry2 < 0) continue;
+          /* Austritt scheinbar von V=(bVis,yV) durch den Linsenpunkt (0,ry2,rz2) */
+          var ddx = -bVis, ddy = ry2 - yV, ddz = rz2, t = XE / ddx;
+          setRay(ri++, [new THREE.Vector3(-g, yO, 0), new THREE.Vector3(0, ry2, rz2),
+            new THREE.Vector3(XE, ry2 + t * ddy, rz2 + t * ddz)], 0.5, col);
+          /* schwache Rueckwaerts-Verlaengerung zum virtuellen Bildpunkt */
+          setRay(ri++, [new THREE.Vector3(0, ry2, rz2), new THREE.Vector3(bVis, yV, 0)], 0.22, col);
+        }
+      }
+      hideRaysFrom(ri);
+
+    } else {
+      /* ===== g ≈ f: austretende Strahlen ~ parallel, Bild im Unendlichen ===== */
+      lv.img.visible = false;
+      lv.vimg.visible = false; lv.vlabel.visible = false;
+      for (var dk = 0; dk < lv.imgDots.length; dk++) lv.imgDots[dk].visible = false;
+      lv.bDim.userData.setText('', '#ffe9a8');
+      setStatus('no', 'g ≈ f: Strahlen laufen parallel — Bild im Unendlichen, kein Schirmbild');
+      var XE2 = 8, nRimI = YS.length + (lv.axis2 ? ZS.length : 0);
+      for (var pw = 0; pw < lv.pts.length; pw++) {
+        if (!lv.ptOn[pw]) continue;
+        var yO3 = lv.pts[pw].y; col = lv.pts[pw].c;
+        var slope = -yO3 / F_LENS;          /* Austrittsrichtung je Punkt (parallel) */
+        setRay(ri++, [new THREE.Vector3(-g, yO3, 0), new THREE.Vector3(0, 0, 0),
+          new THREE.Vector3(XE2, -yO3 * XE2 / g, 0)], 0.7, col);
+        for (var qz = 0; qz < nRimI; qz++) {
+          var ry3 = qz < YS.length ? RR * YS[qz] : 0;
+          var rz3 = qz < YS.length ? 0 : RR * ZS[qz - YS.length];
+          if (lv.halfLens && ry3 < 0) continue;
+          setRay(ri++, [new THREE.Vector3(-g, yO3, 0), new THREE.Vector3(0, ry3, rz3),
+            new THREE.Vector3(XE2, ry3 + slope * XE2, rz3)], 0.5, col);
+        }
+      }
+      hideRaysFrom(ri);
+    }
   },
   ctrls: function(){
     var self = this;
-    mkSlider('Kerze g', 3.5, 10, 0.05, function(){ return lv.g; },
+    mkSlider('Kerze g', 1.5, 10, 0.05, function(){ return lv.g; },
       function(v){ lv.g = v; self.update(); },
       function(v){ return fmt(v, 1) + ' cm'; });
     mkSlider('Schirm', 1, 13.5, 0.05, function(){ return lv.s; },
       function(v){ lv.s = v; self.update(); },
       function(v){ return fmt(v, 1) + ' cm'; });
-    lv.btnCone = mkButton('Lichtkegel', function(){
-      lv.cone = !lv.cone;
-      lv.btnCone.className = 'cbtn' + (lv.cone ? ' on' : '');
+    /* Lichtbuendel je Objektpunkt einzeln waehlbar (farbcodierter Punkt) */
+    lv.ptBtns = [];
+    var ptNames = ['Basis', 'Mitte', 'Flamme'];
+    for (var pIdx = 0; pIdx < lv.pts.length; pIdx++) {
+      (function(idx){
+        var hex = '#' + ('000000' + lv.pts[idx].c.toString(16)).slice(-6);
+        var btn = mkButton('<span style="color:' + hex + '">&#9679;</span> ' + ptNames[idx], function(){
+          lv.ptOn[idx] = !lv.ptOn[idx];
+          btn.className = 'cbtn' + (lv.ptOn[idx] ? ' on' : '');
+          self.update();
+        });
+        lv.ptBtns.push(btn);
+      })(pIdx);
+    }
+    lv.btnMain = mkButton('Hauptstrahlen', function(){
+      lv.mainRays = !lv.mainRays;
+      lv.btnMain.className = 'cbtn' + (lv.mainRays ? ' on' : '');
+      if (lv.mainRays) {
+        /* Konstruktion und Abdeckung schliessen sich aus */
+        if (lv.halfLens) { lv.halfLens = false; lv.cover.visible = false; lv.btnHalf.className = 'cbtn'; }
+        /* Konstruktion braucht mindestens einen Punkt -> Flamme, falls keiner an */
+        if (!(lv.ptOn[0] || lv.ptOn[1] || lv.ptOn[2])) { lv.ptOn[2] = true; lv.ptBtns[2].className = 'cbtn on'; }
+      }
+      self.update();
+    });
+    lv.btnAxis2 = mkButton('2. Achse', function(){
+      lv.axis2 = !lv.axis2;
+      lv.btnAxis2.className = 'cbtn' + (lv.axis2 ? ' on' : '');
+      self.update();
+    });
+    lv.btnHalf = mkButton('Halbe Linse', function(){
+      lv.halfLens = !lv.halfLens;
+      lv.btnHalf.className = 'cbtn' + (lv.halfLens ? ' on' : '');
+      lv.cover.visible = lv.halfLens;
+      if (lv.halfLens && lv.mainRays) { lv.mainRays = false; lv.btnMain.className = 'cbtn'; }
+      /* Abdecken nur mit sichtbaren Strahlen begreifbar -> alle Punkte an, falls keiner an */
+      if (lv.halfLens && !(lv.ptOn[0] || lv.ptOn[1] || lv.ptOn[2])) {
+        for (var pj = 0; pj < lv.ptOn.length; pj++) { lv.ptOn[pj] = true; lv.ptBtns[pj].className = 'cbtn on'; }
+      }
+      if (lv.halfLens && !lv.halfToast) {
+        lv.halfToast = true;
+        showToast('Halbe Linse abgedeckt', 'Das Bild bleibt <b>vollst&auml;ndig</b> &ndash; nur <b>lichtschw&auml;cher</b>. Jeder Bildpunkt wird aus der <b>ganzen</b> Linse gespeist, nicht nur aus dem gegen&uuml;berliegenden St&uuml;ck.');
+      }
       self.update();
     });
     self.update();
@@ -1210,7 +1465,7 @@ var STEPS = [
     f[1].scale.set(0.7 * w, 0.7 / w, 1);
   },
   drag: function(kind, x){
-    if (kind === 'candle') lv.g = clamp(-x, 3.5, 10);
+    if (kind === 'candle') lv.g = clamp(-x, 1.5, 10);
     else lv.s = clamp(x, 1, 13.5);
     syncSliders();
     this.update();
@@ -1299,7 +1554,8 @@ function traceParallel(poly, dots, tIdeal, clipX){
 /* Mission + Chips + Schrittwechsel */
 function renderMission(){
   var st = STEPS[stepIdx];
-  var html = '<div class="mh">' + st.h + '</div><div class="mt">' + st.t + '</div>';
+  var html = '<button class="mhide" id="mHide" type="button" title="Text ausblenden" aria-label="Text ausblenden">&times;</button>';
+  html += '<div class="mh">' + st.h + '</div><div class="mt">' + st.t + '</div>';
   if (st.safe) html += '<div class="msafe">' + st.safe + '</div>';
   if (st.p) html += '<div class="mp">' + st.p + '</div>';
   html += '<div class="mrow">';
@@ -1307,6 +1563,7 @@ function renderMission(){
   html += '<button class="mbtn" id="mNext" type="button">' + (stepIdx === STEPS.length - 1 ? 'Von vorn' : 'Weiter') + '</button>';
   html += '</div>';
   byId('mission').innerHTML = html;
+  byId('mHide').addEventListener('click', function(){ byId('mission').classList.add('hidden'); });
   byId('mPrev').addEventListener('click', function(){ if (stepIdx > 0) setStep(stepIdx - 1); });
   byId('mNext').addEventListener('click', function(){ setStep(stepIdx === STEPS.length - 1 ? 0 : stepIdx + 1); });
 }
