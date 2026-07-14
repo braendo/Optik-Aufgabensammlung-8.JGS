@@ -68,15 +68,6 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .tab{padding:6px 4px;font-size:11px;font-weight:700;color:#8aafc2;background:transparent;border:none;border-radius:7px;cursor:pointer;text-align:center;line-height:1.2}
 .tab.active{background:#1e4d7a;color:#fff}
 .tab:hover:not(.active){background:#112236;color:#e8f4f8}
-.tab-wide{grid-column:1/-1}
-
-/* ── Messtabelle (Experiment-Modus) ── */
-.bank-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
-.bank-table th{color:#8aafc2;font-weight:700;text-align:left;padding:3px 4px;border-bottom:1px solid #1e3a5f}
-.bank-table td{padding:3px 4px;border-bottom:1px solid #10233a;color:#e8f4f8;vertical-align:top}
-.bank-del{background:transparent;border:none;color:#ff8a80;font-size:16px;line-height:1;cursor:pointer;padding:0 4px;-webkit-appearance:none}
-.bank-empty{font-size:12px;color:#8aafc2;font-style:italic;padding:4px 2px 0}
-.je-blank{color:#7ec8e3;font-weight:800}
 
 /* ── Task cards ── */
 .task{background:#112236;border-radius:10px;padding:11px;border:1px solid #1e3a5f;display:flex;flex-direction:column;gap:6px}
@@ -178,8 +169,7 @@ document.documentElement.classList.add('js-on');
     <h1>Sammellinse<small>Physik 8. Klasse – Lernumgebung</small></h1>
 
     <div id="tabs">
-      <button class="tab tab-wide active" data-mode="bank">Experiment</button>
-      <button class="tab" data-mode="construct">Konstruktion</button>
+      <button class="tab active" data-mode="construct">Konstruktion</button>
       <button class="tab" data-mode="free">Erkunden</button>
       <button class="tab" data-mode="predict">Vorhersagen</button>
       <button class="tab" data-mode="diy">Jetzt du!</button>
@@ -194,75 +184,6 @@ document.documentElement.classList.add('js-on');
     <div class="cg" id="cgF">
       <div class="cl">Brennweite f <span class="v" id="df">3.0 cm</span></div>
       <input type="range" id="slf" min="1.5" max="6" step="0.1" value="3.0">
-    </div>
-
-    <!-- ══════════ MODE: BANK („Experiment" – virtuelle optische Bank) ══════════ -->
-    <div id="mode-bank">
-      <div class="ig" id="bank-tiles">
-        <div class="ib" id="bank-g-tile"><div class="il">Gegenstandsweite g</div><div class="iv" id="bank-g-val">–</div></div>
-        <div class="ib" id="bank-f-tile"><div class="il">Brennweite f</div><div class="iv" id="bank-f-val">–</div></div>
-      </div>
-      <div class="task">
-        <div class="task-h">
-          <span><span class="step-pill" id="bank-num">1/4</span><span id="bank-title">Experiment</span></span>
-          <div class="step-nav">
-            <button class="nav-b" id="bank-prev">‹</button>
-            <button class="nav-b" id="bank-next">›</button>
-          </div>
-        </div>
-        <div class="task-q" id="bank-task">…</div>
-        <div class="task-hint" id="bank-hint">…</div>
-
-        <!-- Beobachtung ankreuzen (nur Auftrag 2) – Begriffe wie im Arbeitsblatt -->
-        <div id="bank-obs" class="hidden">
-          <div class="pred-label">Bildgröße</div>
-          <div class="pred-row" id="bank-obs-size">
-            <button data-v="vergrößert">vergrößert</button>
-            <button data-v="gleich groß">gleich groß</button>
-            <button data-v="verkleinert">verkleinert</button>
-          </div>
-          <div class="pred-label" style="margin-top:6px">Ausrichtung</div>
-          <div class="pred-row" id="bank-obs-orient">
-            <button data-v="umgekehrt">umgekehrt</button>
-            <button data-v="aufrecht">aufrecht</button>
-          </div>
-          <div class="pred-label" style="margin-top:6px">Bildart</div>
-          <div class="pred-row" id="bank-obs-type">
-            <button data-v="reell">reell</button>
-            <button data-v="virtuell">virtuell</button>
-          </div>
-        </div>
-
-        <button class="btn-sm" id="bank-take" disabled>Messwert übernehmen</button>
-        <div id="bank-fb"></div>
-
-        <!-- Je-desto-Baustein (erscheint in Auftrag 3 nach 3 Messwerten) -->
-        <div id="bank-jedesto" class="hidden">
-          <div class="pred-label">Vervollständige den Satz</div>
-          <div class="task-q" style="margin:2px 0 4px">Je näher die Kerze an die Linse rückt (aber g &gt; f), desto <span class="je-blank" id="je-b-slot">___</span> wird die Bildweite b und desto <span class="je-blank" id="je-s-slot">___</span> das Bild.</div>
-          <div class="pred-label">Bildweite b</div>
-          <div class="pred-row" id="je-b"><button data-v="größer">größer</button><button data-v="kleiner">kleiner</button></div>
-          <div class="pred-label" style="margin-top:6px">Bild</div>
-          <div class="pred-row" id="je-s"><button data-v="größer">größer</button><button data-v="kleiner">kleiner</button></div>
-          <button class="btn-sm" id="je-check" style="margin-top:6px">Satz prüfen</button>
-          <div id="je-fb"></div>
-        </div>
-      </div>
-
-      <div class="cg" id="bank-cone-wrap">
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#e8f4f8">
-          <input type="checkbox" id="bank-cone" style="width:22px;height:22px;accent-color:#7ec8e3;flex-shrink:0">Lichtkegel zeigen
-        </label>
-      </div>
-
-      <div class="cg" id="bank-table-wrap">
-        <div class="cl">Messtabelle</div>
-        <table class="bank-table">
-          <thead><tr><th>g</th><th>b</th><th>Bildgröße</th><th>Beobachtung</th><th></th></tr></thead>
-          <tbody id="bank-table-body"></tbody>
-        </table>
-        <div class="bank-empty" id="bank-table-empty">Noch keine Messwerte übernommen.</div>
-      </div>
     </div>
 
     <!-- ══════════ MODE: FREE ══════════ -->
@@ -416,6 +337,10 @@ let SUPPRESS_IMAGE = false;
 // "Jetzt du!"-Modus: verdeckt das Ergebnis genauso, aber OHNE den weißen
 // Vorhang rechts (dort zeichnen die Schüler ja selbst).
 let HIDE_RESULT = false;
+// Konstruktions-Modus (Lupe / virtuelles Bild): schrittweises Aufdecken.
+// CON_HIDE_IMG verbirgt den Bildpfeil B, CON_HIDE_BACK die Rückverlängerungen.
+// Muss VOR dem ersten draw()/resize() deklariert sein (das Original-draw liest sie).
+let CON_HIDE_IMG = false, CON_HIDE_BACK = false;
 
 // ── Canvas ───────────────────────────────────────────────────────────────────
 const canvas = document.getElementById('c');
@@ -607,7 +532,7 @@ function draw(){
       seg(ox,H,0,H, th.par,2.2);
       if(!HIDDEN){
         seg(0,H,xEnd,H+s1*xEnd, th.par,2.2);
-        if(b<0) seg(0,H,imgX,imgH, th.par,1.5,[6,4]);
+        if(b<0 && !CON_HIDE_BACK) seg(0,H,imgX,imgH, th.par,1.5,[6,4]);
       }
     }
 
@@ -625,7 +550,7 @@ function draw(){
         }
         if(!HIDDEN){
           seg(0,yl,xEnd,yl, th.fp,2.2,[8,4]);
-          if(b<0) seg(0,yl,imgX,imgH, th.fp,1.5,[6,4]);
+          if(b<0 && !CON_HIDE_BACK) seg(0,yl,imgX,imgH, th.fp,1.5,[6,4]);
         }
       }
     }
@@ -634,11 +559,14 @@ function draw(){
     if(S.mid){
       const s=H/ox;
       seg(ox,H,0,0,     th.mid,2.2,[5,4]);
-      if(!HIDDEN) seg(0,0,xEnd,s*xEnd, th.mid,2.2,[5,4]);
+      if(!HIDDEN){
+        seg(0,0,xEnd,s*xEnd, th.mid,2.2,[5,4]);
+        if(b<0 && !CON_HIDE_BACK) seg(0,0,imgX,imgH, th.mid,1.5,[6,4]);
+      }
     }
 
     // image
-    if(!HIDDEN){
+    if(!HIDDEN && !CON_HIDE_IMG){
       if(b>0){
         vArrow(imgX,0,imgH,'#9c27b0');
         txt('B', imgX+0.38, imgH/2, {size:16, col:'#222', bg:'rgba(255,255,255,0.85)'});
@@ -761,6 +689,8 @@ resize();
 // State for didactic modes
 let MODE = 'free';
 let FORCE_RAYS = null;         // {par, fp, mid} forces ray visibility (construct mode)
+// (CON_HIDE_IMG / CON_HIDE_BACK sind oben bei SUPPRESS_IMAGE/HIDE_RESULT deklariert,
+//  weil das Original-draw sie schon beim ersten resize() liest.)
 
 // ── Entkopplung der Modi ─────────────────────────────────────────────────────
 // Jeder Modus merkt sich seine eigenen Regler-/Strahlen-Einstellungen und den
@@ -787,10 +717,6 @@ function setSlidersLocked(lock){
 
 const _origDraw = draw;
 draw = function(){
-  // Experiment-Modus: komplett eigener Renderer, damit weder Bildpfeil noch
-  // F/2F-Marker oder Linsenlabel „durchleaken" (das Scharfstellen soll ja
-  // gerade selbst gefunden werden). Early-return VOR _origDraw().
-  if(MODE==='bank'){ drawBank(); return; }
   // Apply forced rays if construct mode dictates
   if(FORCE_RAYS){
     S.par = FORCE_RAYS.par;
@@ -855,23 +781,21 @@ document.querySelectorAll('.tab').forEach(t=>{
 
 function switchMode(mode){
   if(mode === MODE) return;
-  if(MODE==='bank'){ bankClearTimer(); bankDrag = null; }
   MODE_SNAP[MODE] = snapControls();
   MODE = mode;
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===mode));
-  ['bank','free','predict','construct','diy'].forEach(m=>{
+  ['free','predict','construct','diy'].forEach(m=>{
     document.getElementById('mode-'+m).classList.toggle('hidden', m!==mode);
   });
   // Reset modal state
   SUPPRESS_IMAGE = false;
   HIDE_RESULT = false;
   FORCE_RAYS = null;
+  CON_HIDE_IMG = false; CON_HIDE_BACK = false;
   setSlidersLocked(false);
   document.getElementById('cgG').classList.remove('hidden');   // Regler gehören den anderen Modi
   document.getElementById('cgF').classList.remove('hidden');
-  if(mode==='bank'){
-    loadBankTask(bankIdx);                // eigener Fortschritt bleibt erhalten
-  } else if(mode==='predict'){
+  if(mode==='predict'){
     loadPredictTask(predictIdx);          // eigener Fortschritt bleibt erhalten
   } else if(mode==='construct'){
     loadConstructTask(constructIdx);      // eigener Fortschritt bleibt erhalten
@@ -1059,33 +983,66 @@ const CONSTRUCT_STEPS = [
   {
     rays: {par:false, fp:false, mid:false},
     g: 8, f: 3,
-    task: '<b>Schritt 1: Ausgangslage</b><br>Der Gegenstand <b>G</b> (orange Pfeil) steht links der Linse. Wir wollen herausfinden, wo das Bild <b>B</b> entsteht.',
+    task: '<b>Beispiel 1 · Schritt 1: Ausgangslage</b><br>Der Gegenstand <b>G</b> (orange Pfeil) steht links der Linse, weiter als 2F entfernt. Wir wollen herausfinden, wo das Bild <b>B</b> entsteht.',
     hint: 'Idee: Wir verfolgen drei besonders einfache Lichtstrahlen, die von der Spitze von G ausgehen. Wo sich diese nach der Linse schneiden, entsteht der Bildpunkt.',
   },
   {
     rays: {par:true, fp:false, mid:false},
     g: 8, f: 3,
-    task: '<b>Schritt 2: Parallelstrahl</b> <span style="color:#0072B2">━</span><br>Ein Strahl, der parallel zur optischen Achse verläuft, wird an der Linse so gebrochen, dass er durch den rechten Brennpunkt <b>F</b> auf der anderen Seite geht.',
+    task: '<b>Beispiel 1 · Schritt 2: Parallelstrahl</b> <span style="color:#0072B2">━</span><br>Ein Strahl, der parallel zur optischen Achse verläuft, wird an der Linse so gebrochen, dass er durch den rechten Brennpunkt <b>F</b> auf der anderen Seite geht.',
     hint: 'Warum? Die Linse ist gewölbt → an jeder Stelle anderer Brechungswinkel. Sammellinsen sind so geformt, dass alle achsenparallelen Strahlen genau im rechten Brennpunkt F gebündelt werden – das ist die <i>Definition</i> des Brennpunkts.',
   },
   {
     rays: {par:true, fp:false, mid:true},
     g: 8, f: 3,
-    task: '<b>Schritt 3: Mittelpunktstrahl</b> <span style="color:#009E73">┄</span><br>Ein Strahl durch die Linsenmitte verläuft <b>geradlinig</b> weiter (keine Richtungsänderung).',
+    task: '<b>Beispiel 1 · Schritt 3: Mittelpunktstrahl</b> <span style="color:#009E73">┄</span><br>Ein Strahl durch die Linsenmitte verläuft <b>geradlinig</b> weiter (keine Richtungsänderung).',
     hint: 'Warum? In der Mitte sind die beiden Linsenflächen praktisch parallel zueinander – wie bei einer dünnen Glasplatte. Der Strahl wird beim Eintritt und Austritt um denselben Winkel gebrochen, sodass die Richtung erhalten bleibt.',
   },
   {
     rays: {par:true, fp:true, mid:true},
     g: 8, f: 3,
-    task: '<b>Schritt 4: Brennpunktstrahl</b> <span style="color:#D55E00">╌</span><br>Ein Strahl, der vor der Linse durch den Brennpunkt <b>F</b> geht, verlässt sie achsenparallel.',
+    task: '<b>Beispiel 1 · Schritt 4: Brennpunktstrahl</b> <span style="color:#D55E00">╌</span><br>Ein Strahl, der vor der Linse durch den Brennpunkt <b>F</b> geht, verlässt sie achsenparallel.',
     hint: 'Das ist der <b>umgekehrte Parallelstrahl</b>! Lichtwege sind umkehrbar: Ginge der Strahl andersherum (achsenparallel hinein), käme er durch F heraus. Beide Aussagen folgen aus demselben Brechungsgesetz.',
   },
   {
     rays: {par:true, fp:true, mid:true},
     g: 8, f: 3,
-    task: '<b>Schritt 5: Bildpunkt</b> <span style="color:#9c27b0">━</span><br>Alle drei Strahlen schneiden sich in einem Punkt (rechts unten) – dort ist der <b>Bildpunkt der Pfeilspitze</b>. Verbinde ihn mit der Achse → das vollständige Bild <b>B</b>.',
+    task: '<b>Beispiel 1 · Schritt 5: Bildpunkt</b> <span style="color:#9c27b0">━</span><br>Alle drei Strahlen schneiden sich in einem Punkt (rechts unten) – dort ist der <b>Bildpunkt der Pfeilspitze</b>. Verbinde ihn mit der Achse → das vollständige Bild <b>B</b>.',
     hint: 'Wichtig: Wir hätten auch nur <i>zwei</i> Strahlen gebraucht (zwei Geraden bestimmen den Schnittpunkt). Der dritte ist eine Kontrolle. Wenn alle drei sich treffen, hast du richtig konstruiert.',
-    extra: '<div class="feedback fb-info" style="margin-top:6px">Probiere jetzt selbst: Verändere oben g (Schieberegler) und beobachte, wie sich der Bildpunkt verschiebt!</div>',
+    extra: '<div class="feedback fb-info" style="margin-top:6px">Ergebnis: reelles, umgekehrtes, verkleinertes Bild (die „Kamera"). Weiter mit › folgt <b>Beispiel 2: die Lupe</b> – der Gegenstand rückt dann <i>innerhalb</i> der Brennweite.</div>',
+  },
+
+  // ══ Beispiel 2: virtuelles Bild – die Lupe (g < f) ══
+  {
+    rays: {par:false, fp:false, mid:false},
+    g: 2, f: 3, hideImg:true, hideBack:true,
+    task: '<b>Beispiel 2 · Schritt 1: Die Lupe</b><br>Jetzt steht der Gegenstand <b>innerhalb</b> der Brennweite: <b>g = 2 cm, f = 3 cm</b> – also g &lt; f. Wir konstruieren mit genau denselben Regeln wie eben … und erleben eine Überraschung.',
+    hint: 'Wir brauchen nur zwei Strahlen von der Pfeilspitze: den Parallelstrahl und den Mittelpunktstrahl. Achte darauf, was hinter der Linse mit ihnen passiert.',
+  },
+  {
+    rays: {par:true, fp:false, mid:false},
+    g: 2, f: 3, hideImg:true, hideBack:true,
+    task: '<b>Beispiel 2 · Schritt 2: Parallelstrahl</b> <span style="color:#0072B2">━</span><br>Dieselbe Regel wie immer: parallel zur Achse ankommen, dann durch den rechten Brennpunkt <b>F</b> gebrochen. Wo G steht, spielt dabei keine Rolle.',
+    hint: 'Hinter der Linse läuft der Strahl schräg nach unten weg. Präge dir seine Richtung ein.',
+  },
+  {
+    rays: {par:true, fp:false, mid:true},
+    g: 2, f: 3, hideImg:true, hideBack:true,
+    task: '<b>Beispiel 2 · Schritt 3: Mittelpunktstrahl</b> <span style="color:#009E73">┄</span><br>Der zweite Strahl geht geradlinig durch die Linsenmitte. <b>Jetzt genau hinsehen:</b> Hinter der Linse laufen beide Strahlen <b>auseinander</b> – sie schneiden sich rechts <b>nie</b>.',
+    hint: 'Kein Schnittpunkt rechts → dort kann kein auffangbares (reelles) Bild entstehen. Wo also ist das Bild?',
+  },
+  {
+    rays: {par:true, fp:false, mid:true},
+    g: 2, f: 3, hideImg:true, hideBack:false,
+    task: '<b>Beispiel 2 · Schritt 4: Rückverlängerung</b><br>Wir verlängern die austretenden Strahlen <b>nach hinten</b> (gestrichelt) – nach links, auf die Seite des Gegenstands. Dort treffen sie sich in einem Punkt.',
+    hint: 'Das Auge sieht die Strahlen so, als kämen sie aus diesem Schnittpunkt links. Ein echter Lichtpunkt ist dort nicht – deshalb heißt das Bild <i>virtuell</i>.',
+  },
+  {
+    rays: {par:true, fp:false, mid:true},
+    g: 2, f: 3, hideImg:false, hideBack:false,
+    task: '<b>Beispiel 2 · Schritt 5: Virtuelles Bild</b> <span style="color:#00897b">╌</span><br>Am Schnittpunkt der Rückverlängerungen liegt das Bild <b>B</b>: <b>virtuell, aufrecht und vergrößert</b>. Genau so wirkt eine <b>Lupe</b>!',
+    hint: 'Vergleich: Beim reellen Bild (Beispiel 1) schneiden sich die Strahlen selbst, beim virtuellen Bild nur ihre gedachten Verlängerungen.',
+    extra: '<div class="feedback fb-info" style="margin-top:6px">Probiere selbst: Ziehe oben <b>g</b> über f hinaus – das Bild springt auf die rechte Seite und wird reell. Bei g = f liegt der Grenzfall „kein Bild".</div>',
   },
 ];
 let constructIdx = 0;
@@ -1097,6 +1054,8 @@ function loadConstructTask(i){
   document.getElementById('slg').value = s.g;
   document.getElementById('slf').value = s.f;
   FORCE_RAYS = s.rays;
+  CON_HIDE_IMG  = !!s.hideImg;    // Lupe-Beispiel: Bildpfeil erst am Schluss zeigen
+  CON_HIDE_BACK = !!s.hideBack;   // Lupe-Beispiel: Rückverlängerungen erst ab Schritt 4
   document.getElementById('con-num').textContent = `${i+1}/${CONSTRUCT_STEPS.length}`;
   document.getElementById('con-task').innerHTML = s.task;
   document.getElementById('con-hint').innerHTML = s.hint;
@@ -1563,7 +1522,6 @@ function diyPointerWorld(e){
 const DIY_STEP_HANDLE = {'par-in':'parIn', 'par-out':'par', 'mid-in':'midIn', 'mid-out':'mid', 'img':'img'};
 
 canvas.addEventListener('pointerdown', function(e){
-  if(MODE==='bank'){ bankPointerDown(e); return; }
   if(MODE!=='diy' || !DIY || DIY.solved) return;
   const p = diyPointerWorld(e);
   let key = null;
@@ -1590,7 +1548,6 @@ canvas.addEventListener('pointerdown', function(e){
 });
 
 canvas.addEventListener('pointermove', function(e){
-  if(MODE==='bank'){ bankPointerMove(e); return; }
   if(!diyDrag) return;
   const p = diyPointerWorld(e);
   const tgt = diyDrag==='img' ? DIY.img : DIY.h[diyDrag];
@@ -1613,7 +1570,6 @@ function diyPointerUp(e){
   draw();
 }
 function canvasPointerUp(e){
-  if(MODE==='bank'){ bankPointerUp(e); return; }
   diyPointerUp(e);
 }
 canvas.addEventListener('pointerup', canvasPointerUp);
@@ -1636,452 +1592,10 @@ window.__sl = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// MODE: BANK „Experiment" – virtuelle optische Bank (Kerze + Schirm + Messtabelle)
-// Eigener Voll-Renderer (drawBank), damit das Scharfstellen wirklich selbst
-// gefunden wird: keine F/2F-Marker, kein Bildpfeil, kein Linsenlabel „leaken".
+// Startmodus: Konstruktion – MODE steht initial auf 'free', daher greift der
+// Wechsel und lädt das erste Konstruktionsbeispiel.
 // ════════════════════════════════════════════════════════════════════════════
-const BANK_SNAP = 0.4;                 // cm – Schärfe-Toleranz (0,15 wäre auf iPad zu fein)
-const BANK_SCREEN_MIN = 1, BANK_SCREEN_MAX = 13.7;   // Schirm-Bereich (WX1 − 0.3)
-const BANK_BAR = 6.5;                  // halbe Höhe der Schirm-Leiste (Welt-cm)
-
-// Kann dieser Browser Canvas-Blur? (iPad-Safari ab 16 ja; sonst Fallback-Schmier)
-let BANK_BLUR_OK = false;
-try { ctx.filter = 'blur(2px)'; BANK_BLUR_OK = (ctx.filter === 'blur(2px)'); ctx.filter = 'none'; } catch(_) { BANK_BLUR_OK = false; }
-
-const BANK_TASKS = [
-  { parallel:true, hideF:true, lockG:true, g:12, f:3,
-    title:'Brennweite bestimmen',
-    task:'Die Lichtquelle steht <b>ganz weit weg</b> – das Licht fällt <b>parallel</b> ein. Schiebe den Schirm, bis der Lichtfleck am <b>kleinsten</b> ist. Dort bündelt die Linse das Licht: im Brennpunkt.',
-    hint:'Lies die Brennweite f an der Skala der Achse ab, sobald der Fleck ein Punkt ist.' },
-  { lockG:true, g:7, f:3, obs:true,
-    title:'Scharfes Bild finden',
-    task:'Die Kerze steht bei <b>g = 7 cm</b> (f = 3 cm). Schiebe den Schirm, bis das Bild <b>scharf</b> ist. Lies b an der Achse ab und übernimm den Messwert. Kreuze an, was du beobachtest.',
-    hint:'Es gibt genau eine scharfe Stelle. Vergleiche das Bild mit der Kerze: größer oder kleiner, herum oder aufrecht?' },
-  { lockG:false, g:6, f:3,
-    title:'Messreihe',
-    task:'Stelle nacheinander <b>g = 6 cm</b> und <b>g = 4 cm</b> ein (Kerze ziehen), stelle jedes Mal scharf und übernimm den Messwert. Was fällt dir auf?',
-    hint:'Ziehe die Kerze näher an die Linse und beobachte Bildweite b und Bildgröße. Achtung: g muss größer als f bleiben.' },
-  { lockG:true, g:2, f:3,
-    title:'Sonderfall Lupe',
-    task:'Jetzt steht die Kerze <b>innerhalb</b> der Brennweite: <b>g = 2 cm</b> (g &lt; f). Versuche, das Bild auf dem Schirm scharf zu stellen. Gelingt es?',
-    hint:'Der Schirm bleibt leer. Schau stattdessen durch die Linse: aufrecht und vergrößert. Das ist die Lupe.' },
-];
-
-let bankIdx = 0;
-let BANK = null;
-let bankDrag = null;
-
-function fmt(x){ return (Math.round(x*10)/10).toFixed(1).replace('.', ','); }
-function bankBildText(res){ return res.type + ', ' + res.orient + ', ' + res.size; }
-function bankObsComplete(){ return BANK.obs.size && BANK.obs.orient && BANK.obs.type; }
-function bankClearTimer(){ if(BANK && BANK.lupeTimer){ clearTimeout(BANK.lupeTimer); BANK.lupeTimer = null; } }
-function bankIsSharp(res, t){
-  if(t.parallel) return Math.abs(BANK.screenX - S.f) <= BANK_SNAP;
-  return res.b !== null && res.b > 0 && res.b <= BANK_SCREEN_MAX && Math.abs(BANK.screenX - res.b) <= BANK_SNAP;
-}
-function bankRoundRect(x,y,w,h,r){
-  ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
-  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
-}
-function setBankFb(cls, html){
-  const fb = document.getElementById('bank-fb');
-  fb.className = cls ? ('feedback ' + cls) : '';
-  fb.innerHTML = html;
-}
-
-function loadBankTask(i){
-  bankIdx = i;
-  const t = BANK_TASKS[i];
-  bankClearTimer();
-  bankDrag = null;
-  if(!BANK) BANK = { rows: [] };
-  BANK.screenX  = t.parallel ? 9 : 8;
-  BANK.showCone = false;
-  BANK.obs      = { size:null, orient:null, type:null };
-  BANK.je       = { b:null, s:null };
-  BANK.lupeShown = false; BANK.lupeTimer = null; BANK.foundF = false; BANK.fbHold = false;
-  S.f = t.f; S.g = t.g; syncControls();
-  document.getElementById('slg').disabled = !!t.lockG;
-  document.getElementById('slf').disabled = true;                 // f ist die feste Apparatur
-  // Bank nutzt eigene kompakte Kacheln statt der großen Regler (spart Platz auf iPad-Portrait)
-  document.getElementById('cgG').classList.add('hidden');
-  document.getElementById('cgF').classList.add('hidden');
-  document.getElementById('bank-g-tile').classList.toggle('hidden', !!t.parallel);   // Auftrag 1: kein g
-  document.getElementById('bank-f-tile').classList.toggle('hidden', !!t.hideF);      // Auftrag 1: f verdeckt
-  document.getElementById('bank-num').textContent = (i+1) + '/' + BANK_TASKS.length;
-  document.getElementById('bank-title').textContent = t.title;
-  document.getElementById('bank-task').innerHTML = t.task;
-  document.getElementById('bank-hint').innerHTML = t.hint;
-  document.getElementById('bank-prev').disabled = (i === 0);
-  document.getElementById('bank-next').disabled = (i === BANK_TASKS.length-1);
-  document.getElementById('bank-obs').classList.toggle('hidden', !t.obs);
-  document.querySelectorAll('#bank-obs .pred-row button').forEach(b => b.classList.remove('sel'));
-  const take = document.getElementById('bank-take');
-  take.classList.toggle('hidden', !!t.parallel);
-  take.disabled = true;
-  document.getElementById('bank-cone').checked = false;
-  document.getElementById('bank-jedesto').classList.toggle('hidden', !(i === 2 && BANK.rows.length >= 3));
-  document.getElementById('je-fb').innerHTML = '';
-  document.querySelectorAll('#je-b button, #je-s button').forEach(b => b.classList.remove('sel'));
-  document.getElementById('je-b-slot').textContent = '___';
-  document.getElementById('je-s-slot').textContent = '___';
-  setBankFb('', '');
-  bankRenderTable();
-  draw();
-}
-
-// ── Voll-Renderer ────────────────────────────────────────────────────────────
-function drawBank(){
-  const t = BANK_TASKS[bankIdx];
-  ctx.clearRect(0,0,cW,cH);
-  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cW,cH);
-  bankDrawGrid();
-  drawLens(S.f, S.ls, false);            // ohne R/d/n-Label
-  if(!t.hideF) bankDrawFoci();           // F/2F beidseitig – außer in Auftrag 1
-  const res = classify(S.g, S.f);
-  if(t.parallel){
-    bankDrawParallel();
-  } else {
-    bankDrawCandle();
-    if(BANK.showCone) bankDrawCone(res);
-  }
-  bankDrawScreen(res, t);
-  bankDrawStatus(res, t);
-  bankUpdateSidebar(res, t);
-}
-
-function bankDrawGrid(){
-  ctx.save(); ctx.strokeStyle='#e8edf2'; ctx.lineWidth=1;
-  for(let x=Math.ceil(WX0);x<=WX1;x++){ctx.beginPath();ctx.moveTo(wx(x),0);ctx.lineTo(wx(x),cH);ctx.stroke();}
-  for(let y=Math.ceil(WY0);y<=WY1;y++){ctx.beginPath();ctx.moveTo(0,wy(y));ctx.lineTo(cW,wy(y));ctx.stroke();}
-  ctx.restore();
-  seg(WX0,0,WX1,0,'#aaa',1.5);
-  ctx.save();
-  ctx.fillStyle='#888'; ctx.font=`${Math.max(10,ws(0.7))}px Arial`;
-  ctx.textAlign='center'; ctx.textBaseline='top';
-  for(let x=-12;x<=12;x+=2){
-    const px=wx(x), py=wy(0);
-    ctx.beginPath(); ctx.strokeStyle='#bbb'; ctx.lineWidth=1;
-    ctx.moveTo(px,py-4); ctx.lineTo(px,py+4); ctx.stroke();
-    if(x!==0) ctx.fillText(x, px, py+6);
-  }
-  ctx.restore();
-  ctx.save();
-  ctx.font=`bold ${Math.max(13,ws(1))}px -apple-system,Arial`;
-  ctx.fillStyle='#222'; ctx.textAlign='center'; ctx.textBaseline='top';
-  ctx.fillText('Optische Bank', cW/2, 6);
-  ctx.restore();
-}
-
-function bankDrawFoci(){
-  for(const [fx,lbl] of [[-S.f,'F'],[S.f,'F'],[-2*S.f,'2F'],[2*S.f,'2F']]){
-    const col = Math.abs(fx) <= S.f+0.01 ? '#4dd0e1' : '#6688aa';
-    const px=wx(fx), py=wy(0), s=ws(0.33);
-    ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.moveTo(px-s,py-s); ctx.lineTo(px+s,py+s);
-    ctx.moveTo(px+s,py-s); ctx.lineTo(px-s,py+s); ctx.stroke(); ctx.restore();
-    txt(lbl, fx, -0.65, {size:13, col:'#333', align:'center', bg:'rgba(255,255,255,0.85)'});
-  }
-}
-
-function bankDrawCandle(){
-  const t = BANK_TASKS[bankIdx];
-  const ox = -S.g;
-  const cx = wx(ox);
-  // Fußteller
-  ctx.save();
-  ctx.fillStyle='#8a97a3';
-  ctx.beginPath(); ctx.ellipse(cx, wy(0), ws(0.42), ws(0.12), 0, 0, 2*Math.PI); ctx.fill();
-  // Wachskörper
-  const wpx = ws(0.5);
-  ctx.fillStyle='#f0e2c0'; ctx.strokeStyle='#c9b896'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.rect(cx-wpx/2, wy(1.5), wpx, wy(0)-wy(1.5)); ctx.fill(); ctx.stroke();
-  // Docht
-  ctx.strokeStyle='#3a2a1a'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(cx, wy(1.5)); ctx.lineTo(cx, wy(1.62)); ctx.stroke();
-  // Flamme (Spitze bei y = H = 2.0)
-  const fcy = wy(1.82);
-  ctx.fillStyle='#f6a01e';
-  ctx.beginPath(); ctx.ellipse(cx, fcy, ws(0.2), ws(0.42), 0, 0, 2*Math.PI); ctx.fill();
-  ctx.fillStyle='#ffe37a';
-  ctx.beginPath(); ctx.ellipse(cx, wy(1.86), ws(0.1), ws(0.26), 0, 0, 2*Math.PI); ctx.fill();
-  ctx.restore();
-  txt('G', ox-0.55, 1.0, {size:16, col:'#222', align:'center', bg:'rgba(255,255,255,0.85)'});
-  // Zieh-Griff, wenn beweglich
-  if(!t.parallel && !t.lockG){
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx, wy(2.0), 11, 0, 2*Math.PI);
-    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fill();
-    ctx.lineWidth=2.5; ctx.strokeStyle='#e07b1a'; ctx.stroke(); ctx.restore();
-    txt('ziehen', ox, 2.55, {size:11, col:'#a05a12', align:'center', bg:'rgba(255,255,255,0.8)'});
-  }
-}
-
-function bankDrawParallel(){
-  const ys = [-2.4,-1.6,-0.8,0.8,1.6,2.4];
-  const col = '#f6b73c';
-  for(const y of ys){
-    seg(WX0+0.2, y, 0, y, col, 2);           // einfallend, parallel
-    seg(0, y, S.f, 0, col, 2);               // gebrochen: durch Brennpunkt
-    const dx = S.f, dy = -y, L = Math.hypot(dx,dy);
-    seg(S.f, 0, S.f + dx/L*6, dy/L*6, col, 1.4);   // danach divergierend
-  }
-  txt('paralleles Licht (Quelle weit weg)', WX0+3.3, 3.4, {size:12, col:'#a86a12', align:'center', bg:'rgba(255,255,255,0.8)'});
-}
-
-function bankDrawCone(res){
-  if(res.b === null) return;
-  const tip = {x:-S.g, y:H}, ap = 2.4, col = '#f6b73c';
-  if(res.b > 0){
-    ctx.save(); ctx.fillStyle='rgba(246,183,60,0.12)';
-    ctx.beginPath();
-    ctx.moveTo(wx(tip.x),wy(tip.y));
-    ctx.lineTo(wx(0),wy(ap)); ctx.lineTo(wx(res.imgX),wy(res.imgH)); ctx.lineTo(wx(0),wy(-ap));
-    ctx.closePath(); ctx.fill(); ctx.restore();
-    seg(tip.x,tip.y,0,ap,col,1.6);  seg(0,ap,res.imgX,res.imgH,col,1.6);
-    seg(tip.x,tip.y,0,-ap,col,1.6); seg(0,-ap,res.imgX,res.imgH,col,1.6);
-  } else {
-    for(const e of [ap,-ap]){
-      seg(tip.x,tip.y,0,e,col,1.6);
-      const dx=0-res.imgX, dy=e-res.imgH, L=Math.hypot(dx,dy)||1;
-      seg(0,e, dx/L*7, e+dy/L*7, col, 1.6);       // divergierender Austritt
-      seg(0,e, res.imgX, res.imgH, col, 1.2, [6,4]); // Rückverlängerung → virtuelles Bild
-    }
-  }
-}
-
-function bankDrawScreen(res, t){
-  const sx = BANK.screenX;
-  ctx.save();
-  ctx.strokeStyle='#94a3af'; ctx.lineWidth=Math.max(4, ws(0.32)); ctx.lineCap='round';
-  ctx.beginPath(); ctx.moveTo(wx(sx),wy(BANK_BAR)); ctx.lineTo(wx(sx),wy(-BANK_BAR)); ctx.stroke();
-  ctx.fillStyle='#94a3af';
-  ctx.fillRect(wx(sx)-ws(0.5), wy(-BANK_BAR), ws(1.0), 5);
-  ctx.restore();
-  // Griff-Knopf oben
-  const kx=wx(sx), ky=wy(BANK_BAR)-11;
-  ctx.save();
-  ctx.beginPath(); ctx.arc(kx,ky,11,0,2*Math.PI);
-  ctx.fillStyle='#fff'; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#3a7abf'; ctx.stroke();
-  ctx.beginPath(); ctx.arc(kx,ky,3.5,0,2*Math.PI); ctx.fillStyle='#3a7abf'; ctx.fill();
-  ctx.restore();
-  txt('Schirm', sx, BANK_BAR+0.75, {size:12, col:'#556', align:'center', bg:'rgba(255,255,255,0.85)'});
-  // Bild bzw. Lichtfleck auf dem Schirm
-  if(t.parallel){
-    const r = Math.min(2.6, 2.4*Math.abs(sx-S.f)/S.f + 0.05);
-    bankDrawSpot(sx, 0, r);
-  } else if(res.b !== null && res.b > 0 && res.b <= WX1){
-    bankDrawImage(sx, res);
-  }
-}
-
-function bankDrawSpot(sx, y, r){
-  const px=wx(sx), py=wy(y), rp=Math.max(3, ws(r));
-  const g = ctx.createRadialGradient(px,py,0,px,py,rp);
-  g.addColorStop(0, 'rgba(255,245,170,0.98)');
-  g.addColorStop(0.5,'rgba(255,214,90,0.72)');
-  g.addColorStop(1, 'rgba(255,200,60,0)');
-  ctx.save(); ctx.fillStyle=g;
-  ctx.beginPath(); ctx.arc(px,py,rp,0,2*Math.PI); ctx.fill(); ctx.restore();
-}
-
-function bankDrawImage(sx, res){
-  const col = '#9c27b0';
-  const ih = Math.max(-BANK_BAR, Math.min(BANK_BAR, res.imgH));   // Bild am physischen Schirmrand abschneiden
-  const defocus = Math.abs(sx - res.b);
-  if(defocus <= BANK_SNAP){
-    seg(sx,0,sx,ih,col,3.2);
-    arrowHead(sx,ih,ih>0,col);
-    txt('B', sx+0.55, ih/2, {size:15, col:'#6a1b7a', bg:'rgba(255,255,255,0.85)'});
-    return;
-  }
-  const alpha = Math.max(0.28, 1 - defocus/7);
-  if(BANK_BLUR_OK){
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.filter = `blur(${Math.min(15, 1.5 + defocus*3.5)}px)`;
-    seg(sx,0,sx,ih,col,4);
-    arrowHead(sx,ih,ih>0,col);
-    ctx.restore();
-  } else {
-    const spread = Math.min(1.8, 0.2 + defocus*0.4), n = 5;
-    ctx.save(); ctx.globalAlpha = Math.max(0.1, alpha*0.5);
-    for(let k=-n;k<=n;k++){ const dy = spread*k/n; seg(sx, dy, sx, ih+dy, col, 3); }
-    ctx.restore();
-  }
-}
-
-function bankDrawStatus(res, t){
-  const sx = BANK.screenX;
-  let label, ok=false;
-  if(t.parallel){
-    if(Math.abs(sx-S.f) <= BANK_SNAP){ label='Brennpunkt gefunden'; ok=true; } else label='Lichtfleck unscharf';
-  } else if(res.b === null){ label='Kein Bild (Kerze im Brennpunkt)'; }
-  else if(res.b < 0){ label='Kein Bild auf dem Schirm – Lupe'; }
-  else if(res.b > BANK_SCREEN_MAX){ label='Bild außerhalb der Bank'; }
-  else if(Math.abs(sx-res.b) <= BANK_SNAP){ label='Scharf: ' + bankBildText(res); ok=true; }
-  else label='Unscharf';
-  const col = ok ? '#1a7a3a' : '#b23b2e';
-  const bg  = ok ? 'rgba(214,245,222,0.95)' : 'rgba(250,226,222,0.95)';
-  ctx.save();
-  const fs = Math.max(16, Math.min(22, ws(1.5)));
-  ctx.font = `bold ${fs}px -apple-system,Arial`;
-  const w = ctx.measureText(label).width, padx=14, pady=8;
-  const bw = w + 2*padx, bh = fs + 2*pady, bx = cW/2 - bw/2, by = 30;
-  ctx.fillStyle=bg; ctx.strokeStyle=col; ctx.lineWidth=1.5;
-  bankRoundRect(bx,by,bw,bh,9); ctx.fill(); ctx.stroke();
-  ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(label, cW/2, by + bh/2);
-  ctx.restore();
-}
-
-function bankUpdateSidebar(res, t){
-  document.getElementById('bank-g-val').textContent = fmt(S.g) + ' cm';
-  document.getElementById('bank-f-val').textContent = fmt(S.f) + ' cm';
-  const sharp = bankIsSharp(res, t);
-  let ready = sharp && !t.parallel;
-  if(t.obs) ready = ready && bankObsComplete();
-  document.getElementById('bank-take').disabled = !ready;
-
-  if(!BANK.fbHold){
-    if(t.parallel){
-      const found = Math.abs(BANK.screenX - S.f) <= BANK_SNAP;
-      if(found){
-        // f bleibt als Kachel verdeckt (sonst vorher ablesbar) – der Wert steht nur im Feedback.
-        BANK.foundF = true;
-        setBankFb('fb-ok', 'Brennpunkt gefunden. Die Brennweite beträgt f &#8776; ' + fmt(S.f) + ' cm. Weiter mit ›.');
-      } else setBankFb('', '');
-    } else if(res.b === null){
-      setBankFb('fb-info', 'Kein Bild: die Kerze steht genau im Brennpunkt (g = f).');
-    } else if(res.b < 0){
-      if(!BANK.lupeTimer && !BANK.lupeShown){
-        BANK.lupeTimer = setTimeout(() => { BANK.lupeShown = true; BANK.lupeTimer = null; if(MODE==='bank') draw(); }, 1200);
-      }
-      setBankFb('fb-info', BANK.lupeShown
-        ? 'Kein auffangbares Bild (g &lt; f). Schau durch die Linse: du siehst ein aufrechtes, vergrößertes Bild – die Lupe.'
-        : 'Der Schirm bleibt leer. Probiere ruhig weiter …');
-    } else if(res.b > BANK_SCREEN_MAX){
-      setBankFb('fb-info', 'Das Bild liegt außerhalb der Bank. Schiebe die Kerze weiter von der Linse weg (größeres g).');
-    } else if(sharp){
-      setBankFb('fb-ok', t.obs && !bankObsComplete()
-        ? 'Scharf! Kreuze noch die Beobachtung an und übernimm dann den Messwert.'
-        : 'Scharf! Lies b an der Achse ab und übernimm den Messwert.');
-    } else {
-      setBankFb('', '');
-    }
-  }
-  // Lupe-Timer aufräumen, sobald der Zustand verlassen wird
-  if(!(res.b !== null && res.b < 0 && !t.parallel)){ bankClearTimer(); BANK.lupeShown = false; }
-}
-
-function bankRenderTable(){
-  const body = document.getElementById('bank-table-body');
-  const empty = document.getElementById('bank-table-empty');
-  body.innerHTML = BANK.rows.map((r,i) =>
-    `<tr><td>${r.g}</td><td>${r.b}</td><td>${r.size}</td><td>${r.obs}</td>`+
-    `<td><button class="bank-del" data-i="${i}" aria-label="Zeile löschen">×</button></td></tr>`).join('');
-  empty.style.display = BANK.rows.length ? 'none' : '';
-}
-
-function bankTake(){
-  const t = BANK_TASKS[bankIdx], res = classify(S.g, S.f);
-  if(t.parallel || !bankIsSharp(res, t)) return;
-  if(t.obs){
-    if(!bankObsComplete()){ BANK.fbHold = true; setBankFb('fb-err', 'Kreuze zuerst Bildgröße, Ausrichtung und Bildart an.'); return; }
-    const okObs = BANK.obs.size===res.size && BANK.obs.orient===res.orient && BANK.obs.type===res.type;
-    if(!okObs){ BANK.fbHold = true; setBankFb('fb-err', 'Schau nochmal genau hin: das Bild ist tatsächlich ' + bankBildText(res) + '. Korrigiere deine Kreuze.'); return; }
-  }
-  BANK.rows.push({ g:fmt(S.g), b:fmt(BANK.screenX), size:res.size, obs:bankBildText(res) });
-  bankRenderTable();
-  BANK.fbHold = true;
-  setBankFb('fb-ok', 'Messwert übernommen: g = ' + fmt(S.g) + ' cm, b = ' + fmt(BANK.screenX) + ' cm.');
-  if(bankIdx === 2 && BANK.rows.length >= 3) document.getElementById('bank-jedesto').classList.remove('hidden');
-  draw();
-}
-
-function bankJeCheck(){
-  const fb = document.getElementById('je-fb');
-  if(!BANK.je.b || !BANK.je.s){ fb.className = 'feedback fb-info'; fb.innerHTML = 'Wähle für beide Lücken ein Wort.'; return; }
-  if(BANK.je.b === 'größer' && BANK.je.s === 'größer'){
-    fb.className = 'feedback fb-ok';
-    fb.innerHTML = 'Richtig. Rückt die Kerze näher an die Linse (aber g &gt; f), werden Bildweite b und Bild größer.';
-  } else {
-    fb.className = 'feedback fb-err';
-    fb.innerHTML = 'Vergleiche deine Messwerte: von g = 7 über 6 zu 4 cm wächst b und das Bild wird größer.';
-  }
-}
-
-// ── Bedien-Verdrahtung (einmalig) ────────────────────────────────────────────
-['size','orient','type'].forEach(cat => {
-  document.querySelectorAll('#bank-obs-'+cat+' button').forEach(b => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('#bank-obs-'+cat+' button').forEach(x => x.classList.remove('sel'));
-      b.classList.add('sel'); BANK.obs[cat] = b.dataset.v; BANK.fbHold = false; draw();
-    });
-  });
-});
-[['#je-b','b','je-b-slot'],['#je-s','s','je-s-slot']].forEach(([sel,key,slot]) => {
-  document.querySelectorAll(sel+' button').forEach(b => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll(sel+' button').forEach(x => x.classList.remove('sel'));
-      b.classList.add('sel'); BANK.je[key] = b.dataset.v; document.getElementById(slot).textContent = b.dataset.v;
-    });
-  });
-});
-document.getElementById('bank-cone').addEventListener('change', e => { BANK.showCone = e.target.checked; draw(); });
-document.getElementById('bank-take').addEventListener('click', bankTake);
-document.getElementById('je-check').addEventListener('click', bankJeCheck);
-document.getElementById('bank-prev').addEventListener('click', () => loadBankTask(Math.max(0, bankIdx-1)));
-document.getElementById('bank-next').addEventListener('click', () => loadBankTask(Math.min(BANK_TASKS.length-1, bankIdx+1)));
-document.getElementById('bank-table-body').addEventListener('click', e => {
-  const b = e.target.closest('.bank-del'); if(!b) return;
-  BANK.rows.splice(+b.dataset.i, 1); bankRenderTable();
-  if(!(bankIdx === 2 && BANK.rows.length >= 3)) document.getElementById('bank-jedesto').classList.add('hidden');
-});
-
-// ── Pointer-Interaktion (Kerze + Schirm) ─────────────────────────────────────
-function bankPointerDown(e){
-  if(!BANK) return;
-  const t = BANK_TASKS[bankIdx];
-  const p = diyPointerWorld(e);
-  const opts = [];
-  if(!t.parallel && !t.lockG){
-    const cy = Math.max(0, Math.min(H, p.y));
-    opts.push(['candle', Math.hypot(wx(p.x)-wx(-S.g), wy(p.y)-wy(cy))]);
-  }
-  const sy = Math.max(-BANK_BAR, Math.min(BANK_BAR, p.y));
-  opts.push(['screen', Math.hypot(wx(p.x)-wx(BANK.screenX), wy(p.y)-wy(sy))]);
-  opts.sort((a,b) => a[1]-b[1]);
-  if(!opts.length || opts[0][1] > 44) return;
-  bankDrag = opts[0][0];
-  BANK.fbHold = false;
-  try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
-  e.preventDefault();
-}
-function bankPointerMove(e){
-  if(!bankDrag) return;
-  const p = diyPointerWorld(e);
-  if(bankDrag === 'candle'){
-    const g = Math.max(0.6, Math.min(13.5, -p.x));
-    S.g = Math.round(g*10)/10;
-    document.getElementById('slg').value = S.g;
-  } else {
-    BANK.screenX = Math.max(BANK_SCREEN_MIN, Math.min(BANK_SCREEN_MAX, p.x));
-  }
-  draw();
-}
-function bankPointerUp(){
-  if(!bankDrag) return;
-  bankDrag = null;
-  draw();
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// Startmodus: Experiment (virtuelle optische Bank) – MODE steht initial auf
-// 'free', daher greift der Wechsel und lädt Auftrag 1 (Brennweite bestimmen).
-// ════════════════════════════════════════════════════════════════════════════
-switchMode('bank');
+switchMode('construct');
 
 // ════════════════════════════════════════════════════════════════════════════
 // iPad-spezifisches Verhalten
